@@ -24,3 +24,25 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+
+
+/* Hide footer */
+.cl-footer, 
+.cl-internal-b3fm6y, 
+.cl-internal-1809771 {
+  display: none !important;
+  visibility: hidden !important;
+  height: 0 !important;
+  padding: 0 !important;
+}
+
+.cl-card {
+  box-shadow: none !important;
+  border: 1px solid #e4e4e7 !important;
+}
+
+.cl-formButtonPrimary {
+  background-color: #18181b !important;
+  text-transform: none !important;
+}
