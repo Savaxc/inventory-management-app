@@ -26,7 +26,7 @@ export default function Sidebar({
       </div>
 
       <nav className="space-y-1.5">
-        <div className="text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-2 ml-3">
+        <div className="text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-2 ml-3">
           Main Menu
         </div>
         {navigation.map((item, key) => {
