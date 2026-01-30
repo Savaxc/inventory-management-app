@@ -8,26 +8,18 @@ export default async function DashboardPage() {
   const user = await getCurrentUser();
   const userId = user.id;
 
-  const [totalProducts, lowStock, allProducts] = await Promise.all([
-    prisma.product.count({ where: { userId } }),
-    prisma.product.count({
-      where: {
-        userId,
-        lowStockAt: { not: null },
-        quantity: { lte: 5 },
-      },
-    }),
-    prisma.product.findMany({
-      where: { userId },
-      select: {
-        price: true,
-        quantity: true,
-        createdAt: true,
-        lowStockAt: true,
-        name: true,
-      },
-    }),
-  ]);
+  const allProducts = await prisma.product.findMany({
+    where: { userId },
+    select: {
+      price: true,
+      quantity: true,
+      createdAt: true,
+      lowStockAt: true,
+      name: true,
+    },
+  });
+
+  const totalProducts = allProducts.length;
 
   const totalValue = allProducts.reduce(
     (sum, product) => sum + Number(product.price) * Number(product.quantity),
@@ -35,7 +27,7 @@ export default async function DashboardPage() {
   );
 
   const outOfStockCount = allProducts.filter(
-    (p) => Number(p.quantity) === 0,
+    (p) => Number(p.quantity) === 0
   ).length;
 
   const lowStockCount = allProducts.filter((p) => {
@@ -179,15 +171,15 @@ export default async function DashboardPage() {
               <div className="text-center">
                 <div className="flex items-center justify-center space-x-2">
                   <div className="text-3xl font-bold text-gray-900">
-                    {lowStock}
+                    {lowStockCount}
                   </div>
 
                   <div className="flex items-center space-x-1">
-                    {lowStock > 0 && (
+                    {lowStockCount > 0 && (
                       <TrendingUp className="w-5 h-5 text-red-600" />
                     )}
 
-                    {lowStock > 10 && (
+                    {lowStockCount > 10 && (
                       <AlertCircle className="w-6 h-6 text-red-600 animate-pulse" />
                     )}
                   </div>
@@ -198,12 +190,12 @@ export default async function DashboardPage() {
                 <div className="flex items-center justify-center mt-2">
                   <span
                     className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
-                      lowStock > 0
+                      lowStockCount > 0
                         ? "bg-red-50 text-red-600"
                         : "bg-gray-50 text-gray-500"
                     }`}
                   >
-                    {lowStock > 0 ? "Action required" : "All good"}
+                    {lowStockCount > 0 ? "Action required" : "All good"}
                   </span>
                 </div>
               </div>
@@ -228,15 +220,16 @@ export default async function DashboardPage() {
           <div className="bg-white rounded-lg border border-gray-200 p-6">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-lg font-semibold text-gray-900">
-                Stock Levels
+                Stock Levels <span className="text-sm">(5 most recent)</span>
               </h2>
             </div>
             <div className="space-y-3">
               {recent.map((product, key) => {
+                const threshold = product.lowStockAt ?? 5;
                 const stockLevel =
                   product.quantity === 0
                     ? 0
-                    : product.quantity <= (product.lowStockAt || 5)
+                    : product.quantity <= threshold
                       ? 1
                       : 2;
 
@@ -288,10 +281,10 @@ export default async function DashboardPage() {
                   className="absolute inset-0 rounded-full"
                   style={{
                     background: `conic-gradient(
-            #9333ea 0% ${inStockPercentage}%, 
-            #facc15 ${inStockPercentage}% ${inStockPercentage + lowStockPercentage}%, 
-            #dc2626 ${inStockPercentage + lowStockPercentage}% 100%
-          )`,
+                      #9333ea 0% ${inStockPercentage}%, 
+                      #facc15 ${inStockPercentage}% ${inStockPercentage + lowStockPercentage}%, 
+                      #dc2626 ${inStockPercentage + lowStockPercentage}% 100%
+                    )`,
                     mask: "radial-gradient(farthest-side, transparent calc(100% - 8px), #fff calc(100% - 7px))",
                     WebkitMask:
                       "radial-gradient(farthest-side, transparent calc(100% - 8px), #fff calc(100% - 7px))",
