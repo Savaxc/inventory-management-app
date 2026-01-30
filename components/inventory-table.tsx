@@ -12,8 +12,10 @@ import {
   XCircle,
   ChevronLeft,
   ChevronRight,
+  Edit2,
 } from "lucide-react";
 import { deleteProduct, deleteManyProducts } from "@/lib/actions/products";
+import { EditProductModal } from "./edit-product-modal";
 
 interface Product {
   id: string;
@@ -30,6 +32,9 @@ export default function InventoryTable({ products }: { products: Product[] }) {
     key: keyof Product;
     direction: "asc" | "desc" | null;
   }>({ key: "name", direction: "asc" });
+
+  const [selectedProduct, setSelectedProduct] = useState<any>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const [currentPage, setCurrentPage] = useState(1);
   const ITEMS_PER_PAGE = 10;
@@ -326,6 +331,16 @@ export default function InventoryTable({ products }: { products: Product[] }) {
                   </td>
                   <td className="px-6 py-4 text-right">
                     <button
+                    onClick={() => {
+                      setSelectedProduct(product);
+                      setIsModalOpen(true);
+                    }}
+                    className="p-2 text-gray-400 hover:text-purple-600 transition-colors"
+                  >
+                    <Edit2 className="w-4 h-4" />
+                  </button>
+
+                    <button
                       onClick={async () => {
                         if (confirm("Delete this product?")) {
                           const formData = new FormData();
@@ -399,7 +414,14 @@ export default function InventoryTable({ products }: { products: Product[] }) {
             </div>
           </div>
         )}
+
+        <EditProductModal 
+        product={selectedProduct} 
+        open={isModalOpen} 
+        onOpenChange={setIsModalOpen} 
+      />
       </div>
     </div>
+    
   );
 }
