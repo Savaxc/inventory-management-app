@@ -3,6 +3,8 @@ import InventoryTable from "@/components/inventory-table";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { SearchInput } from "@/components/search-input";
+import { Suspense } from "react";
+import { InventorySkeleton } from "@/components/skeletons/inventory-skeleton";
 
 export default async function InventoryPage({
   searchParams,
@@ -47,7 +49,9 @@ export default async function InventoryPage({
               <SearchInput />
             </div>
           </div>
-          <InventoryTable key={v} products={products} />
+          <Suspense key={v} fallback={<InventorySkeleton />}>
+            <InventoryTable products={products} />
+          </Suspense>{" "}
         </div>
       </main>
     </div>
