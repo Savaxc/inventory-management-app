@@ -136,17 +136,6 @@ export default function InventoryTable({ products }: { products: Product[] }) {
     }
   };
 
-  const handleBulkDelete = async () => {
-    if (
-      window.confirm(
-        `Are you sure you want to delete ${selectedIds.length} products?`,
-      )
-    ) {
-      await deleteManyProducts(selectedIds);
-      setSelectedIds([]);
-    }
-  };
-
   if (products.length === 0) {
     return (
       <div className="bg-white rounded-xl border border-dashed border-gray-300 py-20 flex flex-col items-center justify-center text-center">
