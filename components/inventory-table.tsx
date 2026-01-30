@@ -16,6 +16,8 @@ import {
 } from "lucide-react";
 import { deleteProduct, deleteManyProducts } from "@/lib/actions/products";
 import { EditProductModal } from "./edit-product-modal";
+import { DeleteProductModal } from "./delete-product-modal";
+import { toast } from "sonner";
 
 interface Product {
   id: string;
@@ -35,6 +37,11 @@ export default function InventoryTable({ products }: { products: Product[] }) {
 
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [productToDelete, setProductToDelete] = useState<Product | null>(null);
+
+  const [isBulkDelete, setIsBulkDelete] = useState(false);
 
   const [currentPage, setCurrentPage] = useState(1);
   const ITEMS_PER_PAGE = 10;
@@ -154,6 +161,44 @@ export default function InventoryTable({ products }: { products: Product[] }) {
     );
   }
 
+  const handleConfirmDelete = async () => {
+    try {
+      if (isBulkDelete) {
+        // Group deletion
+        const deletePromise = deleteManyProducts(selectedIds);
+        toast.promise(deletePromise, {
+          loading: `Deleting ${selectedIds.length} products...`,
+          success: "Products deleted successfully",
+          error: "Failed to delete products",
+        });
+        await deletePromise;
+        setSelectedIds([]);
+      } else if (productToDelete) {
+        // Individual deletion
+        const formData = new FormData();
+        formData.append("id", productToDelete.id);
+
+        const deletePromise = deleteProduct(formData);
+        toast.promise(deletePromise, {
+          loading: `Deleting ${productToDelete.name}...`,
+          success: "Product deleted successfully",
+          error: "Failed to delete product",
+        });
+        await deletePromise;
+      }
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setIsBulkDelete(false);
+      setProductToDelete(null);
+    }
+  };
+
+  const openBulkDeleteModal = () => {
+    setIsBulkDelete(true);
+    setIsDeleteModalOpen(true);
+  };
+
   return (
     <div className="space-y-4">
       {/* Summary Bar */}
@@ -212,8 +257,8 @@ export default function InventoryTable({ products }: { products: Product[] }) {
           {selectedIds.length} selected
         </span>
         <button
-          onClick={handleBulkDelete}
-          className="flex items-center gap-2 px-3 py-1.5 bg-red-600 text-white rounded-md text-sm hover:bg-red-700 font-medium"
+          onClick={openBulkDeleteModal}
+          className="flex items-center gap-2 px-3 py-1.5 bg-red-600 text-white rounded-md text-sm hover:bg-red-700 font-medium transition-all active:scale-95"
         >
           <Trash2 className="w-4 h-4" /> Delete
         </button>
@@ -331,22 +376,19 @@ export default function InventoryTable({ products }: { products: Product[] }) {
                   </td>
                   <td className="px-6 py-4 text-right">
                     <button
-                    onClick={() => {
-                      setSelectedProduct(product);
-                      setIsModalOpen(true);
-                    }}
-                    className="p-2 text-gray-400 hover:text-purple-600 transition-colors"
-                  >
-                    <Edit2 className="w-4 h-4" />
-                  </button>
+                      onClick={() => {
+                        setSelectedProduct(product);
+                        setIsModalOpen(true);
+                      }}
+                      className="p-2 text-gray-400 hover:text-purple-600 transition-colors"
+                    >
+                      <Edit2 className="w-4 h-4" />
+                    </button>
 
                     <button
-                      onClick={async () => {
-                        if (confirm("Delete this product?")) {
-                          const formData = new FormData();
-                          formData.append("id", product.id);
-                          await deleteProduct(formData);
-                        }
+                      onClick={() => {
+                        setProductToDelete(product);
+                        setIsDeleteModalOpen(true);
                       }}
                       className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
                     >
@@ -415,13 +457,26 @@ export default function InventoryTable({ products }: { products: Product[] }) {
           </div>
         )}
 
-        <EditProductModal 
-        product={selectedProduct} 
-        open={isModalOpen} 
-        onOpenChange={setIsModalOpen} 
-      />
+        <DeleteProductModal
+          isOpen={isDeleteModalOpen}
+          onClose={() => {
+            setIsDeleteModalOpen(false);
+            setIsBulkDelete(false);
+          }}
+          onConfirm={handleConfirmDelete}
+          productName={
+            isBulkDelete
+              ? `${selectedIds.length} selected products`
+              : productToDelete?.name || ""
+          }
+        />
+
+        <EditProductModal
+          product={selectedProduct}
+          open={isModalOpen}
+          onOpenChange={setIsModalOpen}
+        />
       </div>
     </div>
-    
   );
 }
