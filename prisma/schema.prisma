@@ -7,7 +7,7 @@ datasource db {
 }
 
 model User {
-  id        String   @id @default(cuid()) // Clerk ID
+  id        String   @id       // Clerk ID
   email     String   @unique
   firstName String?
   lastName  String?

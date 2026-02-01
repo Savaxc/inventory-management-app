@@ -1,65 +1,102 @@
-"use server"
+"use server";
 
 import { revalidatePath } from "next/cache";
-import { getCurrentUser } from "../auth";
 import { prisma } from "../db";
 import { z } from "zod";
 import { redirect } from "next/navigation";
+import { auth, currentUser } from "@clerk/nextjs/server";
 
 const ProductSchema = z.object({
   name: z.string().min(1, "Name is required"),
+  sku: z.string().transform(val => val.trim() === "" ? null : val).optional(),
   price: z.coerce.number().nonnegative("Price must be non-negative"),
   quantity: z.coerce.number().int().min(0, "Quantity must be non-negative"),
-  sku: z.string().optional(),
-  lowStockAt: z.coerce.number().int().min(0).optional(),
+  lowStockAt: z.coerce.number().int().min(0).optional().default(5),
 });
 
-export async function deleteProduct(formData: FormData) {
-  const user = await getCurrentUser();
-  const id = String(formData.get("id") || "");
+async function syncUser() {
+  const { userId } = await auth();
+  const user = await currentUser();
 
-  await prisma.product.deleteMany({
-    where: { id: id, userId: user.id },
+  if (!userId || !user) throw new Error("Unauthorized");
+
+  return await prisma.user.upsert({
+    where: { id: userId },
+    update: {
+      email: user.emailAddresses[0].emailAddress,
+      firstName: user.firstName,
+      lastName: user.lastName,
+    },
+    create: {
+      id: userId,
+      email: user.emailAddresses[0].emailAddress,
+      firstName: user.firstName,
+      lastName: user.lastName,
+    },
   });
-  
-  revalidatePath("/inventory");
-}
-
-export async function deleteManyProducts(ids: string[]) {
-  const user = await getCurrentUser();
-  
-  await prisma.product.deleteMany({
-    where: {
-      id: { in: ids },
-      userId: user.id
-    }
-  });
-
-  revalidatePath("/inventory");
 }
 
 export async function createProduct(formData: FormData) {
-  const user = await getCurrentUser();
+  const dbUser = await syncUser();
 
-  const parsed = ProductSchema.safeParse({
+  const validatedFields = ProductSchema.safeParse({
     name: formData.get("name"),
+    sku: formData.get("sku"),
     price: formData.get("price"),
     quantity: formData.get("quantity"),
-    sku: formData.get("sku") || undefined,
     lowStockAt: formData.get("lowStockAt") || undefined,
   });
 
-  if (!parsed.success) {
+  if (!validatedFields.success) {
+    console.error("Validation errors:", validatedFields.error.flatten());
     throw new Error("Validation failed");
   }
 
   try {
     await prisma.product.create({
-      data: { ...parsed.data, userId: user.id },
+      data: {
+        ...validatedFields.data,
+        userId: dbUser.id,
+      },
     });
+
+    revalidatePath("/inventory");
+    revalidatePath("/dashboard");
   } catch (error) {
-    throw new Error("Failed to create product.");
+    console.error("DETALJNA GREŠKA PRI KREIRANJU:", error);
+    throw new Error("Failed to create product in database.");
   }
   redirect("/inventory");
+}
 
+export async function deleteProduct(formData: FormData) {
+  const { userId } = await auth();
+  if (!userId) throw new Error("Unauthorized");
+
+  const id = String(formData.get("id") || "");
+
+  await prisma.product.deleteMany({
+    where: { 
+        id: id, 
+        userId: userId
+    },
+  });
+  
+  revalidatePath("/inventory");
+  revalidatePath("/dashboard");
+}
+
+export async function deleteManyProducts(ids: string[]) {
+  const { userId } = await auth();
+  if (!userId) throw new Error("Unauthorized");
+  
+  await prisma.product.deleteMany({
+    where: {
+      id: { in: ids },
+      userId: userId
+    }
+  });
+
+  revalidatePath("/inventory");
+  revalidatePath("/dashboard");
 }

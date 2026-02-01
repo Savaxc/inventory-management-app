@@ -25,25 +25,30 @@ export default async function SettingsPage() {
         </div>
 
         <div className="max-w-5xl mx-auto">
-          <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
             <UserProfile
               routing="hash"
               appearance={{
                 elements: {
-                  rootBox: "w-full !max-w-none !m-0",
-                  card: "w-full !max-w-none !shadow-none !border-none bg-transparent",
-                  navbar: "bg-gray-50/50 border-r border-gray-100 p-6 shrink-0",
-                  scrollBox: "w-full !max-w-none",
-                  pageScrollBox: "w-full !max-w-none",
-                  footer: "hidden !h-0 !p-0 !m-0",
+                  rootBox: "w-full !max-w-none !m-0 !block",
+                  card: "w-full !max-w-none !shadow-none !border-none bg-transparent !flex-row !min-h-[600px]",
+                  navbar:
+                    "bg-gray-50/50 border-r border-gray-100 p-8 shrink-0 !w-64",
+                  navbarMobileMenuButton: "text-purple-600",
+                  scrollBox: "w-full !max-w-none !rounded-none",
+                  pageScrollBox: "w-full !max-w-none !p-8",
+                  contentBox: "w-full !max-w-none !block",
+                  footer: "hidden !h-0 !p-0 !m-0 !border-none",
                   footerAction: "hidden",
+                  headerTitle:
+                    "text-2xl font-bold tracking-tight text-gray-900",
+                  headerSubtitle: "text-gray-500",
                 },
                 variables: {
                   colorPrimary: "#9333ea",
+                  borderRadius: "0.75rem",
                 },
               }}
             />
-          </div>
         </div>
 
         {/*Additional Section */}
