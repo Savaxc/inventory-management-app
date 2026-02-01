@@ -2,11 +2,14 @@
 
 Stock.app is a modern, high-performance inventory management solution built for teams who value speed and simplicity. It eliminates the complexity of traditional ERP systems, focusing on real-time tracking, stock efficiency, and actionable insights.
 
-![Stock.app Preview](/public/dashboard-preview-photo.png)
+### Dashboard
+![Stock.app Dashboard](/public/dashboard-preview-photo.png)
 
-![Stock.app Preview](/public/inventory-preview-photo.png)
+### Inventory
+![Stock.app Inventory](/public/inventory-preview-photo.png)
 
-![Stock.app Preview](/public/add-product-preview-photo.png)
+### Add-Product
+![Stock.app Add-Product](/public/add-product-preview-photo.png)
 
 
 
@@ -46,9 +49,8 @@ The project follows a modern Server-First architecture:
 - A PostgreSQL database instance (local or hosted like Supabase/Neon)
 - Clerk API keys
 
-### Installation
 
-1. **Clone the repository**
+**Clone the repository**
    ```bash
    git clone [https://github.com/savaxc/inventory-management-app.git](https://github.com/savaxc/inventory-management-app.git)
    cd inventory-management-app
