@@ -4,6 +4,12 @@ Stock.app is a modern, high-performance inventory management solution built for 
 
 ![Stock.app Preview](/public/dashboard-preview-photo.png)
 
+![Stock.app Preview](/public/inventory-preview-photo.png)
+
+![Stock.app Preview](/public/add-product-preview-photo.png)
+
+
+
 ## Features
 
 - **Intuitive Dashboard**: At-a-glance metrics including total inventory value, stock counts, and growth trends.
