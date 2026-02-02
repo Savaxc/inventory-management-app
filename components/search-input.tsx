@@ -50,7 +50,7 @@ export function SearchInput() {
             onClick={handleClear}
             className="absolute right-4 top-1/2 -translate-y-1/2 p-1 hover:bg-gray-200 rounded-full transition-colors"
           >
-            <X className="w-4 h-4 text-gray-500" />
+            <X className="w-4 h-4 text-gray-500 hover:cursor-pointer" />
           </button>
         )}
         {isPending && (
@@ -61,7 +61,7 @@ export function SearchInput() {
       <button
         type="submit"
         disabled={isPending}
-        className="px-8 py-3 bg-purple-600 text-white rounded-xl hover:bg-purple-700 transition-all font-medium text-sm shadow-sm active:scale-95 disabled:opacity-70"
+        className="px-8 py-3 bg-purple-600 text-white rounded-xl hover:bg-purple-700 transition-all font-medium text-sm shadow-sm active:scale-95 disabled:opacity-70 hover:cursor-pointer"
       >
         Search
       </button>

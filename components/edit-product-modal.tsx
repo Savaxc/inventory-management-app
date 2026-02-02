@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
@@ -16,6 +17,7 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { Loader2, Save } from "lucide-react";
+import { updateProduct } from "@/lib/actions/products";
 
 export function EditProductModal({
   product,
@@ -45,26 +47,25 @@ export function EditProductModal({
     }
   }, [product]);
 
-  const handleUpdate = async () => {
-    setLoading(true);
-    try {
-      const res = await fetch(`/api/products/${product.id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
-      });
+ const handleUpdate = async () => {
+  setLoading(true);
+  try {
+    const result = await updateProduct({
+      id: product.id,
+      ...formData,
+    });
 
-      if (!res.ok) throw new Error();
+    if (!result.success) throw new Error();
 
-      toast.success(`${product.name} updated successfully!`);
-      router.refresh();
-      onOpenChange(false);
-    } catch (error) {
-      toast.error("Failed to update product.");
-    } finally {
-      setLoading(false);
-    }
-  };
+    toast.success(`${product.name} updated successfully!`);
+    onOpenChange(false);
+    router.refresh(); 
+  } catch (error) {
+    toast.error("Failed to update product.");
+  } finally {
+    setLoading(false);
+  }
+};
 
   if (!product) return null;
 

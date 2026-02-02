@@ -369,7 +369,7 @@ export default function InventoryTable({ products }: { products: Product[] }) {
                         setSelectedProduct(product);
                         setIsModalOpen(true);
                       }}
-                      className="p-2 text-gray-400 hover:text-purple-600 transition-colors"
+                      className="p-2 text-gray-400 hover:text-purple-600 transition-colors hover:cursor-pointer"
                     >
                       <Edit2 className="w-4 h-4" />
                     </button>
@@ -379,7 +379,7 @@ export default function InventoryTable({ products }: { products: Product[] }) {
                         setProductToDelete(product);
                         setIsDeleteModalOpen(true);
                       }}
-                      className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
+                      className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all hover:cursor-pointer"
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>
