@@ -13,6 +13,18 @@ model User {
   lastName  String?
   products  Product[]   
   createdAt DateTime @default(now())
+  categories Category[]
+}
+
+model Category {
+  id        String    @id @default(cuid())
+  name      String
+  userId    String
+  user      User      @relation(fields: [userId], references: id)
+  products  Product[]
+  createdAt DateTime  @default(now())
+
+  @@unique([name, userId])
 }
 
 model Product {
@@ -29,6 +41,9 @@ model Product {
 
   userId    String
   user      User     @relation(fields: [userId], references: [id])
+
+  categoryId  String?
+  category    Category? @relation(fields: [categoryId], references: id)
 
   @@index([userId, name])
   @@index([createdAt])

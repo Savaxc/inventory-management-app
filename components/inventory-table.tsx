@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useMemo, useState } from "react";
 import {
   Trash2,
   Package,
@@ -13,11 +13,13 @@ import {
   ChevronLeft,
   ChevronRight,
   Edit2,
+  Tag,
 } from "lucide-react";
 import { deleteProduct, deleteManyProducts } from "@/lib/actions/products";
 import { EditProductModal } from "./edit-product-modal";
 import { DeleteProductModal } from "./delete-product-modal";
 import { toast } from "sonner";
+import { Badge } from "./ui/badge";
 
 interface Product {
   id: string;
@@ -26,9 +28,16 @@ interface Product {
   price: string;
   quantity: number;
   lowStockAt: number | null;
+  categoryName?: string;
 }
 
-export default function InventoryTable({ products }: { products: Product[] }) {
+export default function InventoryTable({
+  products,
+  categories,
+}: {
+  products: Product[];
+  categories: any[];
+}) {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [sortConfig, setSortConfig] = useState<{
     key: keyof Product;
@@ -247,17 +256,17 @@ export default function InventoryTable({ products }: { products: Product[] }) {
         </span>
         <button
           onClick={openBulkDeleteModal}
-          className="flex items-center gap-2 px-3 py-1.5 bg-red-600 text-white rounded-md text-sm hover:bg-red-700 font-medium transition-all active:scale-95"
+          className="flex items-center gap-2 px-3 py-1.5 bg-red-600 text-white rounded-md text-sm hover:bg-red-700 font-medium transition-all active:scale-95 hover:cursor-pointer"
         >
           <Trash2 className="w-4 h-4" /> Delete
         </button>
       </div>
 
       <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-        <table className="w-full border-collapse text-left text-sm">
+        <table className="w-full border-collapse text-left text-sm table-fixed">
           <thead>
             <tr className="bg-gray-50/50 border-b border-gray-100">
-              <th className="px-6 py-4 w-10">
+              <th className="px-6 py-4 w-[60px]">
                 <input
                   type="checkbox"
                   checked={
@@ -268,28 +277,50 @@ export default function InventoryTable({ products }: { products: Product[] }) {
                   className="rounded border-gray-300 text-purple-600 focus:ring-purple-500 cursor-pointer"
                 />
               </th>
-              {(
-                [
-                  { label: "Product", key: "name" },
-                  { label: "SKU", key: "sku" },
-                  { label: "Price", key: "price" },
-                  { label: "Stock", key: "quantity" },
-                ] as const
-              ).map((col) => (
-                <th
-                  key={col.key}
-                  onClick={() => requestSort(col.key as keyof Product)}
-                  className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100/50 transition-colors"
-                >
-                  <div className="flex items-center gap-2">
-                    {col.label} {getSortIcon(col.key as keyof Product)}
-                  </div>
-                </th>
-              ))}
-              <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">
+              <th
+                onClick={() => requestSort("name")}
+                className="px-6 py-4 w-[25%] text-xs font-bold text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100/50 transition-colors"
+              >
+                <div className="flex items-center gap-2">
+                  Product {getSortIcon("name")}
+                </div>
+              </th>
+              <th
+                onClick={() => requestSort("sku")}
+                className="px-6 py-4 w-[15%] text-xs font-bold text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100/50 transition-colors"
+              >
+                <div className="flex items-center gap-2">
+                  SKU {getSortIcon("sku")}
+                </div>
+              </th>
+              <th
+                onClick={() => requestSort("categoryName")}
+                className="px-6 py-4 w-[15%] text-xs font-bold text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100/50 transition-colors"
+              >
+                <div className="flex items-center gap-2">
+                  Category {getSortIcon("categoryName")}
+                </div>
+              </th>
+              <th
+                onClick={() => requestSort("price")}
+                className="px-6 py-4 w-[12%] text-xs font-bold text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100/50 transition-colors"
+              >
+                <div className="flex items-center gap-2">
+                  Price {getSortIcon("price")}
+                </div>
+              </th>
+              <th
+                onClick={() => requestSort("quantity")}
+                className="px-6 py-4 w-[12%] text-xs font-bold text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100/50 transition-colors"
+              >
+                <div className="flex items-center gap-2">
+                  Stock {getSortIcon("quantity")}
+                </div>
+              </th>
+              <th className="px-6 py-4 w-[12%] text-xs font-bold text-gray-500 uppercase tracking-wider">
                 Status
               </th>
-              <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider text-right">
+              <th className="px-6 py-4 w-[100px] text-xs font-bold text-gray-500 uppercase tracking-wider text-right">
                 Actions
               </th>
             </tr>
@@ -329,19 +360,25 @@ export default function InventoryTable({ products }: { products: Product[] }) {
                     />
                   </td>
                   <td className="px-6 py-4">
-                    <div className="flex items-center gap-3">
-                      <div
-                        className={`w-8 h-8 rounded bg-gray-100 flex items-center justify-center ${isSelected ? "text-purple-600 bg-purple-100" : "text-gray-400"}`}
-                      >
+                    <div className="flex items-center gap-3 overflow-hidden">
+                      <div className={`w-8 h-8 rounded bg-gray-100 flex-shrink-0 flex items-center justify-center ${isSelected ? "text-purple-600 bg-purple-100" : "text-gray-400"}`}>
                         <Package className="w-4 h-4" />
                       </div>
-                      <span className="font-semibold text-gray-900">
+                      <span className="font-semibold text-gray-900 truncate" title={product.name}>
                         {product.name}
                       </span>
                     </div>
                   </td>
-                  <td className="px-6 py-4 text-gray-500 font-mono">
+                  <td className="px-6 py-4 text-gray-500 font-mono truncate">
                     {product.sku || "N/A"}
+                  </td>
+                  <td className="px-6 py-4">
+                    <div className="truncate">
+                        <Badge variant="secondary" className="bg-purple-50 text-purple-700 border-none hover:bg-purple-100 flex items-center gap-1 w-fit font-medium">
+                          <Tag className="w-3 h-3" />
+                          <span className="truncate max-w-[80px]">{product.categoryName || "General"}</span>
+                        </Badge>
+                      </div>
                   </td>
                   <td className="px-6 py-4 text-gray-900 font-medium">
                     ${Number(product.price).toFixed(2)}
@@ -357,32 +394,19 @@ export default function InventoryTable({ products }: { products: Product[] }) {
                     </div>
                   </td>
                   <td className="px-6 py-4">
-                    <span
-                      className={`px-2 py-0.5 rounded-md text-[10px] font-bold border uppercase ${status.css}`}
-                    >
+                    <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold border uppercase whitespace-nowrap ${status.css}`}>
                       {status.label}
                     </span>
                   </td>
                   <td className="px-6 py-4 text-right">
-                    <button
-                      onClick={() => {
-                        setSelectedProduct(product);
-                        setIsModalOpen(true);
-                      }}
-                      className="p-2 text-gray-400 hover:text-purple-600 transition-colors hover:cursor-pointer"
-                    >
-                      <Edit2 className="w-4 h-4" />
-                    </button>
-
-                    <button
-                      onClick={() => {
-                        setProductToDelete(product);
-                        setIsDeleteModalOpen(true);
-                      }}
-                      className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all hover:cursor-pointer"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
+                    <div className="flex justify-end gap-1">
+                        <button onClick={() => { setSelectedProduct(product); setIsModalOpen(true); }} className="p-2 text-gray-400 hover:text-purple-600 transition-colors hover:cursor-pointer">
+                          <Edit2 className="w-4 h-4" />
+                        </button>
+                        <button onClick={() => { setProductToDelete(product); setIsDeleteModalOpen(true); }} className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all hover:cursor-pointer">
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
                   </td>
                 </tr>
               );
@@ -392,7 +416,7 @@ export default function InventoryTable({ products }: { products: Product[] }) {
 
         {/* Pagination */}
         {totalPages > 1 && (
-          <div className="px-6 py-4 bg-gray-50/50 border-t border-gray-100 flex items-center justify-between">
+          <div className="px-6 py-4 h-16 bg-gray-50/50 border-t border-gray-100 flex items-center justify-between">
             <p className="text-xs text-gray-500">
               Showing{" "}
               <span className="font-medium text-gray-900">
@@ -412,7 +436,7 @@ export default function InventoryTable({ products }: { products: Product[] }) {
               <button
                 onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
                 disabled={currentPage === 1}
-                className="p-2 rounded-lg border border-gray-200 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="p-2 rounded-lg border border-gray-200 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors hover:cursor-pointer"
               >
                 <ChevronLeft className="w-4 h-4 text-gray-600" />
               </button>
@@ -422,7 +446,7 @@ export default function InventoryTable({ products }: { products: Product[] }) {
                   <button
                     key={i + 1}
                     onClick={() => setCurrentPage(i + 1)}
-                    className={`w-8 h-8 rounded-lg text-xs font-medium transition-all ${
+                    className={`w-8 h-8 rounded-lg text-xs font-medium transition-all hover:cursor-pointer ${
                       currentPage === i + 1
                         ? "bg-purple-600 text-white shadow-sm"
                         : "text-gray-600 hover:bg-gray-100"
@@ -438,7 +462,7 @@ export default function InventoryTable({ products }: { products: Product[] }) {
                   setCurrentPage((prev) => Math.min(prev + 1, totalPages))
                 }
                 disabled={currentPage === totalPages}
-                className="p-2 rounded-lg border border-gray-200 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="p-2 rounded-lg border border-gray-200 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors hover:cursor-pointer"
               >
                 <ChevronRight className="w-4 h-4 text-gray-600" />
               </button>
@@ -462,6 +486,7 @@ export default function InventoryTable({ products }: { products: Product[] }) {
 
         <EditProductModal
           product={selectedProduct}
+          categories={categories}
           open={isModalOpen}
           onOpenChange={setIsModalOpen}
         />

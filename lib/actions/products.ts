@@ -16,6 +16,7 @@ const ProductSchema = z.object({
   price: z.coerce.number().nonnegative("Price must be non-negative"),
   quantity: z.coerce.number().int().min(0, "Quantity must be non-negative"),
   lowStockAt: z.coerce.number().int().min(0).optional().default(5),
+  categoryId: z.string().optional().nullable(),
 });
 
 const UpdateProductSchema = z.object({
@@ -23,6 +24,7 @@ const UpdateProductSchema = z.object({
   price: z.coerce.number().nonnegative(),
   quantity: z.coerce.number().int().min(0),
   lowStockAt: z.coerce.number().int().min(0),
+  categoryId: z.string().optional().nullable(),
 });
 
 async function syncUser() {
@@ -56,6 +58,7 @@ export async function createProduct(formData: FormData) {
     price: formData.get("price"),
     quantity: formData.get("quantity"),
     lowStockAt: formData.get("lowStockAt") || undefined,
+    categoryId: formData.get("categoryId")
   });
 
   if (!validatedFields.success) {
@@ -110,6 +113,7 @@ export async function updateProduct(data: z.infer<typeof UpdateProductSchema>) {
         price: data.price,
         quantity: data.quantity,
         lowStockAt: data.lowStockAt,
+        categoryId: data.categoryId,
       },
     });
 

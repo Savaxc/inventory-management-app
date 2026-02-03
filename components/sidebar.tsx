@@ -1,5 +1,5 @@
 import { UserButton } from "@clerk/nextjs";
-import { BarChart3, Package, Plus, Settings } from "lucide-react";
+import { BarChart3, Grid2x2Plus, Package, Plus, Settings } from "lucide-react";
 import Link from "next/link";
 
 export default function Sidebar({
@@ -11,6 +11,7 @@ export default function Sidebar({
     { name: "Dashboard", href: "/dashboard", icon: BarChart3 },
     { name: "Inventory", href: "/inventory", icon: Package },
     { name: "Add Product", href: "/add-product", icon: Plus },
+    { name: "Categories", href: "/categories", icon: Grid2x2Plus },
     { name: "Settings", href: "/settings", icon: Settings },
   ];
 
