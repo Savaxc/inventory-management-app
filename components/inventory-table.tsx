@@ -14,12 +14,18 @@ import {
   ChevronRight,
   Edit2,
   Tag,
+  FileSpreadsheet,
+  FileText,
 } from "lucide-react";
 import { deleteProduct, deleteManyProducts } from "@/lib/actions/products";
 import { EditProductModal } from "./edit-product-modal";
 import { DeleteProductModal } from "./delete-product-modal";
 import { toast } from "sonner";
 import { Badge } from "./ui/badge";
+import { exportToCSV } from "@/lib/utils/export";
+import { PDFDownloadLink } from "@react-pdf/renderer";
+import { InventoryPDFReport } from "./inventory-pdf-report";
+import { ImportCSVButton } from "./import-csv-button";
 
 interface Product {
   id: string;
@@ -262,6 +268,33 @@ export default function InventoryTable({
         </button>
       </div>
 
+      {/* CSV/PDF Buttons */}
+      <div className="flex items-center justify-between mb-3 w-full">
+        <ImportCSVButton />
+        <div className="flex gap-2">
+          <button
+            onClick={() => exportToCSV(products, "inventory-export")}
+            className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-xl text-sm font-medium hover:bg-purple-50 transition-all text-gray-700 hover:cursor-pointer"
+          >
+            <FileSpreadsheet className="w-4 h-4 text-purple-600" />
+            Export CSV
+          </button>
+
+          <PDFDownloadLink
+            document={<InventoryPDFReport products={products} />}
+            fileName="inventory-report.pdf"
+            className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-xl text-sm font-medium hover:bg-purple-50 transition-all text-gray-700"
+          >
+            {({ loading }) => (
+              <>
+                <FileText className="w-4 h-4 text-purple-600" />
+                {loading ? "Preparing..." : "Download PDF"}
+              </>
+            )}
+          </PDFDownloadLink>
+        </div>
+      </div>
+
       <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
         <table className="w-full border-collapse text-left text-sm table-fixed">
           <thead>
@@ -361,24 +394,41 @@ export default function InventoryTable({
                   </td>
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-3 overflow-hidden">
-                      <div className={`w-8 h-8 rounded bg-gray-100 flex-shrink-0 flex items-center justify-center ${isSelected ? "text-purple-600 bg-purple-100" : "text-gray-400"}`}>
+                      <div
+                        className={`w-8 h-8 rounded bg-gray-100 flex-shrink-0 flex items-center justify-center ${isSelected ? "text-purple-600 bg-purple-100" : "text-gray-400"}`}
+                      >
                         <Package className="w-4 h-4" />
                       </div>
-                      <span className="font-semibold text-gray-900 truncate" title={product.name}>
+                      <span
+                        className="font-semibold text-gray-900 truncate"
+                        title={product.name}
+                      >
                         {product.name}
                       </span>
                     </div>
                   </td>
                   <td className="px-6 py-4 text-gray-500 font-mono truncate">
+                    <span
+                    className="text-gray-500 font-mono truncate"
+                    title={product.sku || "N/A"}
+                    >
                     {product.sku || "N/A"}
+
+                    </span>
+                    
                   </td>
                   <td className="px-6 py-4">
                     <div className="truncate">
-                        <Badge variant="secondary" className="bg-purple-50 text-purple-700 border-none hover:bg-purple-100 flex items-center gap-1 w-fit font-medium">
-                          <Tag className="w-3 h-3" />
-                          <span className="truncate max-w-[80px]">{product.categoryName || "General"}</span>
-                        </Badge>
-                      </div>
+                      <Badge
+                        variant="secondary"
+                        className="bg-purple-50 text-purple-700 border-none hover:bg-purple-100 flex items-center gap-1 w-fit font-medium"
+                      >
+                        <Tag className="w-3 h-3" />
+                        <span className="truncate max-w-[80px]">
+                          {product.categoryName || "General"}
+                        </span>
+                      </Badge>
+                    </div>
                   </td>
                   <td className="px-6 py-4 text-gray-900 font-medium">
                     ${Number(product.price).toFixed(2)}
@@ -394,19 +444,35 @@ export default function InventoryTable({
                     </div>
                   </td>
                   <td className="px-6 py-4">
-                    <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold border uppercase whitespace-nowrap ${status.css}`}>
+                    <span
+                      className={`px-2 py-0.5 rounded-md text-[10px] font-bold border uppercase whitespace-nowrap ${status.css}`}
+                    >
                       {status.label}
                     </span>
                   </td>
                   <td className="px-6 py-4 text-right">
                     <div className="flex justify-end gap-1">
-                        <button onClick={() => { setSelectedProduct(product); setIsModalOpen(true); }} className="p-2 text-gray-400 hover:text-purple-600 transition-colors hover:cursor-pointer">
-                          <Edit2 className="w-4 h-4" />
-                        </button>
-                        <button onClick={() => { setProductToDelete(product); setIsDeleteModalOpen(true); }} className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all hover:cursor-pointer">
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
+                      <button
+                        title="Edit item"
+                        onClick={() => {
+                          setSelectedProduct(product);
+                          setIsModalOpen(true);
+                        }}
+                        className="p-2 text-gray-400 hover:text-purple-600 transition-colors hover:cursor-pointer"
+                      >
+                        <Edit2 className="w-4 h-4" />
+                      </button>
+                      <button
+                        title="Delete this item permanently"
+                        onClick={() => {
+                          setProductToDelete(product);
+                          setIsDeleteModalOpen(true);
+                        }}
+                        className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all hover:cursor-pointer"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
                   </td>
                 </tr>
               );

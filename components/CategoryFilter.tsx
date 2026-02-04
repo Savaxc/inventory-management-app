@@ -31,7 +31,7 @@ export function CategoryFilter({ categories }: { categories: any[] }) {
     <div className="flex flex-wrap gap-2 mb-6">
       <Badge
         variant={activeCategories.length === 0 ? "default" : "outline"}
-        className="cursor-pointer px-4 py-1 rounded-full"
+        className="cursor-pointer px-4 py-1 rounded-full text-sm hover:bg-purple-300"
         onClick={() => router.push("?")}
       >
         All Categories
@@ -40,7 +40,7 @@ export function CategoryFilter({ categories }: { categories: any[] }) {
         <Badge
           key={cat.id}
           variant={activeCategories.includes(cat.id) ? "default" : "outline"}
-          className={`cursor-pointer px-4 py-1 rounded-full transition-all ${
+          className={`cursor-pointer px-4 py-1 rounded-full transition-all hover:bg-purple-100 ${
             activeCategories.includes(cat.id) ? "bg-purple-600" : ""
           }`}
           onClick={() => toggleCategory(cat.id)}

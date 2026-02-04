@@ -81,7 +81,7 @@ export function EditProductModal({
             Edit Product Details
           </DialogTitle>
           <DialogDescription className="text-gray-600 text-lg">
-            <hr/><br/>
+            <br/>
             <strong>{product.name}</strong>
           </DialogDescription>
         </DialogHeader>

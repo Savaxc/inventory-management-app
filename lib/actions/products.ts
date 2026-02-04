@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use server";
 
 import { revalidatePath } from "next/cache";
@@ -6,6 +7,7 @@ import { z } from "zod";
 import { redirect } from "next/navigation";
 import { auth, currentUser } from "@clerk/nextjs/server";
 import { checkAndSendLowStockAlert } from "../notifications";
+import { getCurrentUser } from "../auth";
 
 const ProductSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -177,4 +179,37 @@ export async function deleteManyProducts(ids: string[]) {
 
   revalidatePath("/inventory");
   revalidatePath("/dashboard");
+}
+
+export async function importProducts(products: any[]) {
+  try {
+    const user = await getCurrentUser();
+    if (!user) throw new Error("User not found");
+
+    const result = await prisma.product.createMany({
+      skipDuplicates: true,
+      data: products.map((p) => {
+        const name = p["Product Name"];
+        const sku = p["SKU"] === "N/A" ? null : p["SKU"];
+        const price = parseFloat(p["Price"]) || 0;
+        const quantity = parseInt(p["Stock Quantity"]) || 0;
+
+        return {
+          name: name,
+          sku: sku || null,
+          price: price,
+          quantity: quantity,
+          lowStockAt: 5,
+          userId: user.id,
+        };
+      }),
+    });
+
+    revalidatePath("/inventory");
+    revalidatePath("/dashboard");
+    return { success: true, count: result.count };
+  } catch (error) {
+    console.error("Import error:", error);
+    return { success: false };
+  }
 }
