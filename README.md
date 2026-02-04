@@ -27,7 +27,7 @@ Stock.app is a modern, high-performance inventory management solution built for 
 - **Intuitive Dashboard**: At-a-glance metrics including total inventory value, stock counts, and growth trends.
 - **Real-time Inventory Tracking**: Full CRUD functionality for products with automatic stock level status (In Stock, Low Stock, Out of Stock).
 - **Smart Analytics**: Visual representations of inventory growth over time using weekly charts.
-- **Automated Alerts**: Visual cues and "Action Required" badges for products falling below custom thresholds.
+- **Automated Alerts**: Email notifications powered by **Resend** for products falling below custom thresholds.
 - **Minimalist UX**: Clean, distraction-free interface with a focus on usability and fast data entry.
 - **Robust Security**: Authentication and user-specific data isolation powered by Clerk.
 - **Advanced Reporting**: Generate professional **PDF Valuation Reports** and export full inventory data to **CSV** with a single click.
@@ -36,7 +36,6 @@ Stock.app is a modern, high-performance inventory management solution built for 
     - **Quick Stats**: Real-time insights into total categories, usage frequency, and empty labels.
     - **Search & Sort**: Instantly filter through categories and sort by name or product count.
     - **Safety Dialogs**: Confirmation modals for all destructive actions to prevent data loss.
-- **Automated Alerts**: Email notifications powered by **Resend** for products falling below custom thresholds.
 
 ## Tech Stack
 
