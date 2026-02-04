@@ -73,16 +73,20 @@ The project follows a modern Server-First architecture:
    cd inventory-management-app
 
 2. **Install dependencies**
+   ```bash
    npm install
 
 3. **Set up environment variables Create a .env.local file in the root directory:**
+   ```bash
    DATABASE_URL="your_postgresql_url"
    NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY="your_clerk_pub_key"
    CLERK_SECRET_KEY="your_clerk_secret_key"
    RESEND_API_KEY="your_resend_key"
 
 4. **Sync Database Schema**
+   ```bash
    npx prisma db push
 
 5. **Run the development server**
+   ```bash
    npm run dev
