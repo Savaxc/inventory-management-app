@@ -2,6 +2,8 @@
 
 Stock.app is a modern, high-performance inventory management solution built for teams who value speed and simplicity. It eliminates the complexity of traditional ERP systems, focusing on real-time tracking, stock efficiency, and actionable insights.
 
+## Previews
+
 ### Dashboard
 ![Stock.app Dashboard](/public/dashboard-preview-photo.png)
 
@@ -28,6 +30,13 @@ Stock.app is a modern, high-performance inventory management solution built for 
 - **Automated Alerts**: Visual cues and "Action Required" badges for products falling below custom thresholds.
 - **Minimalist UX**: Clean, distraction-free interface with a focus on usability and fast data entry.
 - **Robust Security**: Authentication and user-specific data isolation powered by Clerk.
+- **Advanced Reporting**: Generate professional **PDF Valuation Reports** and export full inventory data to **CSV** with a single click.
+- **Bulk Import**: Quickly populate your database using the **CSV Import** tool with a downloadable template to ensure data consistency.
+- **Smart Category Management**: 
+    - **Quick Stats**: Real-time insights into total categories, usage frequency, and empty labels.
+    - **Search & Sort**: Instantly filter through categories and sort by name or product count.
+    - **Safety Dialogs**: Confirmation modals for all destructive actions to prevent data loss.
+- **Automated Alerts**: Email notifications powered by **Resend** for products falling below custom thresholds.
 
 ## Tech Stack
 
@@ -54,10 +63,27 @@ The project follows a modern Server-First architecture:
 - Node.js 18.x or later
 - Next.js 15.x or later
 - A PostgreSQL database instance (local or hosted like Supabase/Neon)
-- Clerk API keys
+- Clerk API keys (Authentication)
+- Resend API key (Email Alerts)
 
+### Installation
 
-**Clone the repository**
+1. **Clone the repository**
    ```bash
    git clone [https://github.com/savaxc/inventory-management-app.git](https://github.com/savaxc/inventory-management-app.git)
    cd inventory-management-app
+
+2. **Install dependencies**
+   npm install
+
+3. **Set up environment variables Create a .env.local file in the root directory:**
+   DATABASE_URL="your_postgresql_url"
+   NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY="your_clerk_pub_key"
+   CLERK_SECRET_KEY="your_clerk_secret_key"
+   RESEND_API_KEY="your_resend_key"
+
+4. **Sync Database Schema**
+   npx prisma db push
+
+5. **Run the development server**
+   npm run dev
