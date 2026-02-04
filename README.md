@@ -6,10 +6,17 @@ Stock.app is a modern, high-performance inventory management solution built for 
 ![Stock.app Dashboard](/public/dashboard-preview-photo.png)
 
 ### Inventory
-![Stock.app Inventory](/public/inventory-preview-photo.png)
+![Stock.app Inventory](/public/inventory-v2-preview.png)
 
 ### Add-Product
-![Stock.app Add-Product](/public/add-product-preview-photo.png)
+![Stock.app Add-Product](/public/add-product-v2-preview.png)
+
+### Prodcut Categories
+![Stock.app Categories](/public/categories-preview.png)
+
+### E-mail Alert Send
+![Stock.app Email](/public/email-resend-alert-preview.png)
+
 
 
 

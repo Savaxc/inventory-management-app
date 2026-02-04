@@ -28,3 +28,28 @@ export async function getCategories() {
     orderBy: { name: "asc" },
   });
 }
+
+export async function updateCategory(id: string, name: string) {
+  const { userId } = await auth();
+  if (!userId) throw new Error("Unauthorized");
+
+  await prisma.category.update({
+    where: { id, userId },
+    data: { name },
+  });
+
+  revalidatePath("/categories");
+  return { success: true };
+}
+
+export async function deleteCategory(id: string) {
+  const { userId } = await auth();
+  if (!userId) throw new Error("Unauthorized");
+
+  await prisma.category.delete({
+    where: { id, userId },
+  });
+
+  revalidatePath("/categories");
+  return { success: true };
+}
