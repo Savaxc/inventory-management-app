@@ -3,6 +3,7 @@
 import { auth } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
 import { prisma } from "../db";
+import { logActivity } from "../logger";
 
 export async function createCategory(name: string) {
   const { userId } = await auth();
@@ -15,7 +16,16 @@ export async function createCategory(name: string) {
     },
   });
 
+  await logActivity(
+    userId,
+    "CREATE",
+    "CATEGORY",
+    category.name,
+    "New category created for organizing products."
+  );
+
   revalidatePath("/inventory");
+  revalidatePath("/categories");
   return category;
 }
 
@@ -33,12 +43,27 @@ export async function updateCategory(id: string, name: string) {
   const { userId } = await auth();
   if (!userId) throw new Error("Unauthorized");
 
-  await prisma.category.update({
+  const oldCategory = await prisma.category.findUnique({
+    where: { id, userId },
+  });
+
+  const updatedCategory = await prisma.category.update({
     where: { id, userId },
     data: { name },
   });
 
+  if (oldCategory) {
+    await logActivity(
+      userId,
+      "UPDATE",
+      "CATEGORY",
+      updatedCategory.name,
+      `Category renamed: "${oldCategory.name}" → "${updatedCategory.name}"`
+    );
+  }
+
   revalidatePath("/categories");
+  revalidatePath("/inventory");
   return { success: true };
 }
 
@@ -46,10 +71,25 @@ export async function deleteCategory(id: string) {
   const { userId } = await auth();
   if (!userId) throw new Error("Unauthorized");
 
+  const categoryToDelete = await prisma.category.findUnique({
+    where: { id, userId },
+  });
+
+  if (categoryToDelete) {
+    await logActivity(
+      userId,
+      "DELETE",
+      "CATEGORY",
+      categoryToDelete.name,
+      "Category deleted. Products assigned to this category may now be uncategorized."
+    );
+  }
+
   await prisma.category.delete({
     where: { id, userId },
   });
 
   revalidatePath("/categories");
+  revalidatePath("/inventory");
   return { success: true };
 }

@@ -8,6 +8,7 @@ import { redirect } from "next/navigation";
 import { auth, currentUser } from "@clerk/nextjs/server";
 import { checkAndSendLowStockAlert } from "../notifications";
 import { getCurrentUser } from "../auth";
+import { logActivity } from "../logger";
 
 const ProductSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -76,13 +77,21 @@ export async function createProduct(formData: FormData) {
       },
     });
 
+    await logActivity(
+      dbUser.id,
+      "CREATE",
+      "PRODUCT",
+      product.name,
+      `New product added with ${product.quantity} items.`
+    );
+
     const allProducts = await prisma.product.findMany({
       where: { userId: dbUser.id },
     });
 
     const summary = {
       totalItems: allProducts.length,
-      lowStockCount: allProducts.filter((p) => p.quantity <= (p.lowStockAt ?? 5),).length,
+      lowStockCount: allProducts.filter((p) => p.quantity <= (p.lowStockAt ?? 5)).length,
       totalValue: allProducts.reduce((sum, p) => sum + (Number(p.price) * p.quantity), 0)
     };
 
@@ -109,6 +118,11 @@ export async function updateProduct(data: z.infer<typeof UpdateProductSchema>) {
   if (!userId) throw new Error("Unauthorized");
 
   try {
+    const oldProduct = await prisma.product.findUnique({
+      where: { id: data.id, userId },
+      include: { category: true }
+    });
+
     const updatedProduct = await prisma.product.update({
       where: { id: data.id, userId: userId },
       data: {
@@ -117,7 +131,31 @@ export async function updateProduct(data: z.infer<typeof UpdateProductSchema>) {
         lowStockAt: data.lowStockAt,
         categoryId: data.categoryId,
       },
+      include: { category: true }
     });
+
+    const changes: string[] = [];
+
+    if (oldProduct) {
+      if (oldProduct.quantity !== updatedProduct.quantity) {
+        changes.push(
+          `Quantity adjusted: ${oldProduct.quantity} → ${updatedProduct.quantity}`,
+        );
+      }
+      if (Number(oldProduct.price) !== Number(updatedProduct.price)) {
+        changes.push(`Price adjusted: $${oldProduct.price} → $${updatedProduct.price}`);
+      }
+      if (oldProduct.categoryId !== updatedProduct.categoryId) {
+        const oldName = oldProduct.category?.name || "No Category";
+        const newName = updatedProduct.category?.name || "No Category";
+        changes.push(`Category adjusted: "${oldName}" → "${newName}"`);
+      }
+    }
+
+    const logDetails = changes.length > 0 ? changes.join(", ") : "General details updated";
+
+    await logActivity(userId, "UPDATE", "PRODUCT", updatedProduct.name, logDetails);
+
 
     const allProducts = await prisma.product.findMany({
       where: { userId: userId }
@@ -155,11 +193,16 @@ export async function deleteProduct(formData: FormData) {
 
   const id = String(formData.get("id") || "");
 
+  const product = await prisma.product.findUnique({
+    where: { id, userId }
+  });
+
+  if (product) {
+    await logActivity(userId, "DELETE", "PRODUCT", product.name, "Product permanently removed.");
+  }
+
   await prisma.product.deleteMany({
-    where: {
-      id: id,
-      userId: userId,
-    },
+    where: { id: id, userId: userId },
   });
 
   revalidatePath("/inventory");
@@ -169,6 +212,8 @@ export async function deleteProduct(formData: FormData) {
 export async function deleteManyProducts(ids: string[]) {
   const { userId } = await auth();
   if (!userId) throw new Error("Unauthorized");
+
+  await logActivity(userId, "DELETE", "PRODUCT", "Multiple Products", `Deleted ${ids.length} products.`);
 
   await prisma.product.deleteMany({
     where: {
@@ -204,6 +249,14 @@ export async function importProducts(products: any[]) {
         };
       }),
     });
+
+    await logActivity(
+      user.id, 
+      "IMPORT", 
+      "PRODUCT", 
+      "Bulk Import", 
+      `Successfully imported ${result.count} products from CSV.`
+    );
 
     revalidatePath("/inventory");
     revalidatePath("/dashboard");

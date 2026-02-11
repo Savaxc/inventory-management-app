@@ -1,3 +1,4 @@
+import { ActivityFeed } from "@/components/activity-feed";
 import ProductsChart from "@/components/products-chart";
 import Sidebar from "@/components/sidebar";
 import { getCurrentUser } from "@/lib/auth";
@@ -99,7 +100,6 @@ export default async function DashboardPage() {
     centerValue = "100%";
     centerLabel = "Out of Stock";
   } else if (inStockPercentage === 0 && lowStockPercentage > 0) {
-    // If there is nothing in stock but there is Low Stock, show the Low Stock percentage
     centerValue = `${lowStockPercentage}%`;
     centerLabel = "Low Stock";
   }
@@ -340,6 +340,9 @@ export default async function DashboardPage() {
               ))}
             </div>
           </div>
+        </div>
+        <div className="lg:col-span-1">
+          <ActivityFeed userId={user.id} />
         </div>
       </main>
     </div>

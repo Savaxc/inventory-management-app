@@ -14,6 +14,7 @@ model User {
   products  Product[]   
   createdAt DateTime @default(now())
   categories Category[]
+  activities Activity[]
 }
 
 model Category {
@@ -47,4 +48,16 @@ model Product {
 
   @@index([userId, name])
   @@index([createdAt])
+}
+
+model Activity {
+  id          String   @id @default(cuid())
+  userId      String
+  action      String
+  entityType  String 
+  entityName  String 
+  details     String 
+  createdAt   DateTime @default(now())
+
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
