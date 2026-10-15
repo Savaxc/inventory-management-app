@@ -46,6 +46,7 @@ model Product {
   categoryId  String?
   category    Category? @relation(fields: [categoryId], references: id)
 
+  @@unique([sku, userId])
   @@index([userId, name])
   @@index([createdAt])
 }
