@@ -1,7 +1,6 @@
 import { ActivityFeed } from "@/components/activity-feed";
 import ProductsChart from "@/components/products-chart";
 import Sidebar from "@/components/sidebar";
-import { StockAssistantChat } from "@/components/StockAssistantChat";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { TrendingUp, AlertCircle } from "lucide-react";
@@ -34,8 +33,6 @@ export default async function DashboardPage() {
 
   const lowStockCount = allProducts.filter((p) => {
     const productQuantity = Number(p.quantity);
-
-    // Use lowStockAt from the database, if it doesn't exist, use 5
     const threshold = p.lowStockAt ?? 5;
     return productQuantity > 0 && productQuantity <= threshold;
   }).length;
@@ -55,7 +52,6 @@ export default async function DashboardPage() {
       ? Math.max(0, 100 - (inStockPercentage + lowStockPercentage))
       : 0;
 
-  //Weekly Products
   const now = new Date();
   const weeklyProductsData = [];
 
@@ -87,7 +83,6 @@ export default async function DashboardPage() {
     take: 5,
   });
 
-  // Display the text in the center of the Efficiency circle
   let centerValue = `${inStockPercentage}%`;
   let centerLabel = "In Stock";
 
@@ -130,7 +125,6 @@ export default async function DashboardPage() {
             </h2>
 
             <div className="grid grid-cols-3 gap-6">
-              {/* Total Products */}
               <div className="text-center">
                 <div className="flex items-center justify-center space-x-2">
                   <div className="text-3xl font-bold text-gray-900">
@@ -146,7 +140,6 @@ export default async function DashboardPage() {
                 </div>
               </div>
 
-              {/* Total Value */}
               <div className="text-center border-x border-gray-100 px-4">
                 <div className="flex items-center justify-center space-x-2">
                   <div className="text-3xl font-bold text-gray-900">
@@ -165,7 +158,6 @@ export default async function DashboardPage() {
                 </div>
               </div>
 
-              {/* Low Stock */}
               <div className="text-center">
                 <div className="flex items-center justify-center space-x-2">
                   <div className="text-3xl font-bold text-gray-900">
@@ -200,7 +192,7 @@ export default async function DashboardPage() {
             </div>
           </div>
 
-          {/* Iventory Over Time */}
+          {/* Inventory Over Time */}
           <div className="bg-white rounded-lg border border-gray-200 p-6">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-lg font-semibold text-gray-900">
@@ -289,7 +281,6 @@ export default async function DashboardPage() {
                   }}
                 />
 
-                {/* Circle Center Text */}
                 <div className="absolute inset-0 flex items-center justify-center">
                   <div className="text-center px-4">
                     <div className="text-3xl font-bold text-gray-900 leading-tight">
@@ -303,7 +294,6 @@ export default async function DashboardPage() {
               </div>
             </div>
 
-            {/* Colors Footer */}
             <div className="mt-8 space-y-3">
               {[
                 {
@@ -339,14 +329,9 @@ export default async function DashboardPage() {
           </div>
         </div>
 
-        {/* Sekcija za Aktivnosti i AI Asistenta */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-          <div className="lg:col-span-1">
-            <ActivityFeed userId={user.id} />
-          </div>
-          <div className="lg:col-span-1 flex justify-center">
-            <StockAssistantChat />
-          </div>
+        {/* Activity Feed */}
+        <div className="mb-8">
+          <ActivityFeed userId={user.id} />
         </div>
       </main>
     </div>

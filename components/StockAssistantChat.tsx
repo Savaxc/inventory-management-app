@@ -1,23 +1,59 @@
 'use client'
 
-import { useState } from "react"
+import { useState, useEffect, useRef } from "react"
+import { Bot, X, Send, Trash2, Sparkles } from "lucide-react"
 
 interface Message {
   role: "user" | "assistant" | "tool"
   content: string
-  proposal?: {
-    productId: string
-    productName: string
-    oldQuantity: number
-    newQuantity: number
-    reason: string
-  }
 }
 
+const STORAGE_KEY = "stock_app_assistant_messages"
+
 export function StockAssistantChat() {
-  const [messages, setMessages] = useState<Message[]>([])
+  const [isOpen, setIsOpen] = useState(false)
+  const [messages, setMessages] = useState<Message[]>(() => {
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem(STORAGE_KEY)
+      if (saved) {
+        try {
+          return JSON.parse(saved)
+        } catch (e) {
+          console.error("Greška pri učitavanju istorije poruka:", e)
+        }
+      }
+    }
+    return []
+  })
+
   const [input, setInput] = useState("")
   const [loading, setLoading] = useState(false)
+  const messagesEndRef = useRef<HTMLDivElement>(null)
+
+  // Automatsko skrolovanje na najnoviju poruku
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
+  }
+
+  useEffect(() => {
+    if (isOpen) {
+      scrollToBottom()
+    }
+  }, [messages, isOpen])
+
+  // Čuvanje u localStorage
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(messages))
+    }
+  }, [messages])
+
+  const clearChat = () => {
+    setMessages([])
+    if (typeof window !== "undefined") {
+      localStorage.removeItem(STORAGE_KEY)
+    }
+  }
 
   const sendMessage = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -98,51 +134,115 @@ export function StockAssistantChat() {
   }
 
   return (
-    <div className="flex flex-col h-[500px] border rounded-lg bg-white shadow-md p-4 max-w-md w-full">
-      <div className="font-bold text-lg border-b pb-2 mb-3 flex items-center justify-between">
-        <span>🤖 Stock Asistent</span>
-        <span className="text-xs bg-green-100 text-green-800 px-2 py-0.5 rounded-full">Online</span>
-      </div>
-
-      <div className="flex-1 overflow-y-auto space-y-3 pr-2 mb-3 text-sm">
-        {messages.length === 0 && (
-          <p className="text-gray-400 text-center mt-20">
-            Pitaj me bilo šta o zalihama, npr. &quot;Šta mi je pri kraju?&quot;
-          </p>
-        )}
-        {messages.map((m, idx) => (
-          <div
-            key={idx}
-            className={`p-3 rounded-lg ${
-              m.role === "user"
-                ? "bg-blue-50 text-blue-900 ml-8"
-                : m.role === "tool"
-                ? "bg-gray-100 text-gray-600 text-xs italic text-center"
-                : "bg-gray-50 text-gray-800 mr-8 border"
-            }`}
-          >
-            <p className="whitespace-pre-wrap">{m.content}</p>
+    <div className="fixed bottom-6 right-6 z-50">
+      {/* Otvoreni Chat Prozor */}
+      {isOpen && (
+        <div className="mb-4 w-80 md:w-96 h-[480px] bg-white rounded-2xl shadow-2xl border border-gray-100 flex flex-col overflow-hidden transition-all duration-300 animate-in fade-in slide-in-from-bottom-4">
+          {/* Header */}
+          <div className="bg-gradient-to-r from-purple-600 to-indigo-600 p-4 text-white flex items-center justify-between">
+            <div className="flex items-center space-x-2">
+              <div className="bg-white/20 p-1.5 rounded-lg backdrop-blur-sm">
+                <Sparkles className="w-5 h-5 text-white" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-sm">Stock Asistent</h3>
+                <p className="text-[10px] text-purple-100">Mozaik AI (DeepSeek)</p>
+              </div>
+            </div>
+            
+            <div className="flex items-center space-x-1">
+              {messages.length > 0 && (
+                <button
+                  onClick={clearChat}
+                  title="Očisti razgovor"
+                  className="p-1.5 hover:bg-white/20 rounded-lg transition-colors text-purple-100 hover:text-white"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              )}
+              <button
+                onClick={() => setIsOpen(false)}
+                className="p-1.5 hover:bg-white/20 rounded-lg transition-colors text-purple-100 hover:text-white"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
           </div>
-        ))}
-        {loading && <div className="text-gray-400 text-xs italic">Asistent razmišlja...</div>}
-      </div>
 
-      <form onSubmit={sendMessage} className="flex gap-2 border-t pt-3">
-        <input
-          type="text"
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          placeholder="Unesi poruku..."
-          className="flex-1 border rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-        />
-        <button
-          type="submit"
-          disabled={loading}
-          className="bg-blue-600 text-white px-4 py-2 rounded text-sm hover:bg-blue-700 disabled:opacity-50"
-        >
-          Pošalji
-        </button>
-      </form>
+          {/* Messages Body */}
+          <div className="flex-1 overflow-y-auto p-4 space-y-3 text-xs bg-gray-50/50">
+            {messages.length === 0 && (
+              <div className="text-center text-gray-400 my-auto pt-16">
+                <Bot className="w-10 h-10 mx-auto mb-2 text-purple-300" />
+                <p className="font-medium text-gray-600 text-sm mb-1">Zdravo! Kako mogu da pomognem?</p>
+                <p className="text-[11px] px-4">Pitaj me npr. &quot;Koji proizvodi su na izmaku?&quot; ili &quot;Prikaži sumu zaliha&quot;.</p>
+              </div>
+            )}
+
+            {messages.map((m, idx) => (
+              <div
+                key={idx}
+                className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}
+              >
+                <div
+                  className={`max-w-[85%] p-3 rounded-2xl ${
+                    m.role === "user"
+                      ? "bg-purple-600 text-white rounded-br-none shadow-sm"
+                      : m.role === "tool"
+                      ? "bg-gray-200/80 text-gray-600 italic text-[11px] text-center w-full py-1.5"
+                      : "bg-white text-gray-800 border border-gray-100 shadow-sm rounded-bl-none"
+                  }`}
+                >
+                  <p className="whitespace-pre-wrap leading-relaxed">{m.content}</p>
+                </div>
+              </div>
+            ))}
+            {loading && (
+              <div className="flex items-center space-x-2 text-purple-600 text-[11px] bg-white border border-purple-100 p-2.5 rounded-xl w-max shadow-sm">
+                <Bot className="w-4 h-4 animate-bounce text-purple-600" />
+                <span>Asistent analizira podatke...</span>
+              </div>
+            )}
+            <div ref={messagesEndRef} />
+          </div>
+
+          {/* Input Form */}
+          <form onSubmit={sendMessage} className="p-3 bg-white border-t border-gray-100 flex gap-2 items-center">
+            <input
+              type="text"
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              placeholder="Postavi pitanje..."
+              className="flex-1 bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition-all"
+            />
+            <button
+              type="submit"
+              disabled={loading || !input.trim()}
+              className="bg-purple-600 hover:bg-purple-700 text-white p-2 rounded-xl disabled:opacity-40 transition-colors shadow-sm flex items-center justify-center"
+            >
+              <Send className="w-4 h-4" />
+            </button>
+          </form>
+        </div>
+      )}
+
+      {/* Plutajuće Dugme (Trigger) */}
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className="group relative bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white p-4 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center focus:outline-none ring-4 ring-purple-100 active:scale-95"
+      >
+        {isOpen ? (
+          <X className="w-6 h-6" />
+        ) : (
+          <>
+            <Bot className="w-6 h-6" />
+            {/* Indikator ako ima poruka */}
+            {messages.length > 0 && (
+              <span className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-green-500 border-2 border-white rounded-full"></span>
+            )}
+          </>
+        )}
+      </button>
     </div>
   )
 }

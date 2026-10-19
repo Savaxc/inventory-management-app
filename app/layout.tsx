@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { ClerkProvider } from "@clerk/nextjs";
 import { Toaster } from "@/components/ui/sonner";
+import { StockAssistantChat } from "@/components/StockAssistantChat";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -35,6 +36,9 @@ export default function RootLayout({
           }}
         >
           {children}
+
+          <StockAssistantChat />
+
           <Toaster position="top-right" richColors />
         </ClerkProvider>
       </body>
