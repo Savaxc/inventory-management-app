@@ -61,7 +61,7 @@ export async function createProduct(formData: FormData) {
     price: formData.get("price"),
     quantity: formData.get("quantity"),
     lowStockAt: formData.get("lowStockAt") || undefined,
-    categoryId: formData.get("categoryId")
+    categoryId: formData.get("categoryId"),
   });
 
   if (!validatedFields.success) {
@@ -69,10 +69,17 @@ export async function createProduct(formData: FormData) {
     throw new Error("Validation failed");
   }
 
+  const data = validatedFields.data;
+
   try {
     const product = await prisma.product.create({
       data: {
-        ...validatedFields.data,
+        name: data.name,
+        sku: data.sku,
+        price: data.price,
+        quantity: data.quantity,
+        lowStockAt: data.lowStockAt,
+        categoryId: data.categoryId && data.categoryId !== "" ? data.categoryId : null,
         userId: dbUser.id,
       },
     });
@@ -92,7 +99,7 @@ export async function createProduct(formData: FormData) {
     const summary = {
       totalItems: allProducts.length,
       lowStockCount: allProducts.filter((p) => p.quantity <= (p.lowStockAt ?? 5)).length,
-      totalValue: allProducts.reduce((sum, p) => sum + (Number(p.price) * p.quantity), 0)
+      totalValue: allProducts.reduce((sum, p) => sum + (Number(p.price) * p.quantity), 0),
     };
 
     await checkAndSendLowStockAlert(
@@ -100,7 +107,7 @@ export async function createProduct(formData: FormData) {
       product.name,
       product.quantity,
       product.lowStockAt,
-      summary,
+      summary
     );
 
     revalidatePath("/inventory");
@@ -120,7 +127,7 @@ export async function updateProduct(data: z.infer<typeof UpdateProductSchema>) {
   try {
     const oldProduct = await prisma.product.findUnique({
       where: { id: data.id, userId },
-      include: { category: true }
+      include: { category: true },
     });
 
     const updatedProduct = await prisma.product.update({
@@ -129,9 +136,9 @@ export async function updateProduct(data: z.infer<typeof UpdateProductSchema>) {
         price: data.price,
         quantity: data.quantity,
         lowStockAt: data.lowStockAt,
-        categoryId: data.categoryId,
+        categoryId: data.categoryId && data.categoryId !== "" ? data.categoryId : null,
       },
-      include: { category: true }
+      include: { category: true },
     });
 
     const changes: string[] = [];
@@ -139,7 +146,7 @@ export async function updateProduct(data: z.infer<typeof UpdateProductSchema>) {
     if (oldProduct) {
       if (oldProduct.quantity !== updatedProduct.quantity) {
         changes.push(
-          `Quantity adjusted: ${oldProduct.quantity} → ${updatedProduct.quantity}`,
+          `Quantity adjusted: ${oldProduct.quantity} → ${updatedProduct.quantity}`
         );
       }
       if (Number(oldProduct.price) !== Number(updatedProduct.price)) {
@@ -156,15 +163,14 @@ export async function updateProduct(data: z.infer<typeof UpdateProductSchema>) {
 
     await logActivity(userId, "UPDATE", "PRODUCT", updatedProduct.name, logDetails);
 
-
     const allProducts = await prisma.product.findMany({
-      where: { userId: userId }
+      where: { userId: userId },
     });
 
     const summary = {
       totalItems: allProducts.length,
-      lowStockCount: allProducts.filter(p => p.quantity <= (p.lowStockAt ?? 5)).length,
-      totalValue: allProducts.reduce((sum, p) => sum + (Number(p.price) * p.quantity), 0)
+      lowStockCount: allProducts.filter((p) => p.quantity <= (p.lowStockAt ?? 5)).length,
+      totalValue: allProducts.reduce((sum, p) => sum + (Number(p.price) * p.quantity), 0),
     };
 
     const user = await currentUser();
@@ -194,7 +200,7 @@ export async function deleteProduct(formData: FormData) {
   const id = String(formData.get("id") || "");
 
   const product = await prisma.product.findUnique({
-    where: { id, userId }
+    where: { id, userId },
   });
 
   if (product) {
@@ -213,7 +219,13 @@ export async function deleteManyProducts(ids: string[]) {
   const { userId } = await auth();
   if (!userId) throw new Error("Unauthorized");
 
-  await logActivity(userId, "DELETE", "PRODUCT", "Multiple Products", `Deleted ${ids.length} products.`);
+  await logActivity(
+    userId,
+    "DELETE",
+    "PRODUCT",
+    "Multiple Products",
+    `Deleted ${ids.length} products.`
+  );
 
   await prisma.product.deleteMany({
     where: {
@@ -251,10 +263,10 @@ export async function importProducts(products: any[]) {
     });
 
     await logActivity(
-      user.id, 
-      "IMPORT", 
-      "PRODUCT", 
-      "Bulk Import", 
+      user.id,
+      "IMPORT",
+      "PRODUCT",
+      "Bulk Import",
       `Successfully imported ${result.count} products from CSV.`
     );
 

@@ -1,6 +1,7 @@
 import { ActivityFeed } from "@/components/activity-feed";
 import ProductsChart from "@/components/products-chart";
 import Sidebar from "@/components/sidebar";
+import { StockAssistantChat } from "@/components/StockAssistantChat";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { TrendingUp, AlertCircle } from "lucide-react";
@@ -85,9 +86,6 @@ export default async function DashboardPage() {
     orderBy: { createdAt: "desc" },
     take: 5,
   });
-
-  console.log("total value:", totalValue);
-  console.log(weeklyProductsData.length);
 
   // Display the text in the center of the Efficiency circle
   let centerValue = `${inStockPercentage}%`;
@@ -294,7 +292,6 @@ export default async function DashboardPage() {
                 {/* Circle Center Text */}
                 <div className="absolute inset-0 flex items-center justify-center">
                   <div className="text-center px-4">
-                    {" "}
                     <div className="text-3xl font-bold text-gray-900 leading-tight">
                       {centerValue}
                     </div>
@@ -341,8 +338,15 @@ export default async function DashboardPage() {
             </div>
           </div>
         </div>
-        <div className="lg:col-span-1">
-          <ActivityFeed userId={user.id} />
+
+        {/* Sekcija za Aktivnosti i AI Asistenta */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+          <div className="lg:col-span-1">
+            <ActivityFeed userId={user.id} />
+          </div>
+          <div className="lg:col-span-1 flex justify-center">
+            <StockAssistantChat />
+          </div>
         </div>
       </main>
     </div>
