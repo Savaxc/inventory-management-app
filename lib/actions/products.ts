@@ -3,18 +3,22 @@
 
 import { revalidatePath } from "next/cache";
 import { prisma } from "../db";
+import { Prisma } from "@prisma/client";
 import { z } from "zod";
 import { redirect } from "next/navigation";
 import { auth, currentUser } from "@clerk/nextjs/server";
 import { checkAndSendLowStockAlert } from "../notifications";
-import { getCurrentUser } from "../auth";
+import { getDbUser } from "../auth";
 import { logActivity } from "../logger";
 
 const ProductSchema = z.object({
   name: z.string().min(1, "Name is required"),
   sku: z
     .string()
-    .transform((val) => (val.trim() === "" ? null : val))
+    .transform((val) => {
+      const trimmed = val.trim();
+      return trimmed === "" ? null : trimmed;
+    })
     .optional(),
   price: z.coerce.number().nonnegative("Price must be non-negative"),
   quantity: z.coerce.number().int().min(0, "Quantity must be non-negative"),
@@ -30,30 +34,13 @@ const UpdateProductSchema = z.object({
   categoryId: z.string().optional().nullable(),
 });
 
-async function syncUser() {
-  const { userId } = await auth();
-  const user = await currentUser();
+type ProductFormState = { error?: string };
 
-  if (!userId || !user) throw new Error("Unauthorized");
-
-  return await prisma.user.upsert({
-    where: { id: userId },
-    update: {
-      email: user.emailAddresses[0].emailAddress,
-      firstName: user.firstName,
-      lastName: user.lastName,
-    },
-    create: {
-      id: userId,
-      email: user.emailAddresses[0].emailAddress,
-      firstName: user.firstName,
-      lastName: user.lastName,
-    },
-  });
-}
-
-export async function createProduct(formData: FormData) {
-  const dbUser = await syncUser();
+export async function createProduct(
+  _prevState: ProductFormState,
+  formData: FormData
+): Promise<ProductFormState> {
+  const dbUser = await getDbUser();
 
   const validatedFields = ProductSchema.safeParse({
     name: formData.get("name"),
@@ -65,14 +52,18 @@ export async function createProduct(formData: FormData) {
   });
 
   if (!validatedFields.success) {
-    console.error("Validation errors:", validatedFields.error.flatten());
-    throw new Error("Validation failed");
+    return {
+      error:
+        validatedFields.error.issues[0]?.message ??
+        "Please check the form and try again.",
+    };
   }
 
   const data = validatedFields.data;
+  let product: { name: string; quantity: number; lowStockAt: number | null };
 
   try {
-    const product = await prisma.product.create({
+    product = await prisma.product.create({
       data: {
         name: data.name,
         sku: data.sku,
@@ -83,15 +74,28 @@ export async function createProduct(formData: FormData) {
         userId: dbUser.id,
       },
     });
+  } catch (error) {
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
+      return {
+        error: data.sku
+          ? `A product with SKU "${data.sku}" already exists.`
+          : "A product with the same SKU already exists.",
+      };
+    }
 
-    await logActivity(
-      dbUser.id,
-      "CREATE",
-      "PRODUCT",
-      product.name,
-      `New product added with ${product.quantity} items.`
-    );
+    console.error("Failed to create product:", error);
+    return { error: "Could not save the product. Please try again." };
+  }
 
+  await logActivity(
+    dbUser.id,
+    "CREATE",
+    "PRODUCT",
+    product.name,
+    `New product added with ${product.quantity} items.`
+  );
+
+  try {
     const allProducts = await prisma.product.findMany({
       where: { userId: dbUser.id },
     });
@@ -109,13 +113,14 @@ export async function createProduct(formData: FormData) {
       product.lowStockAt,
       summary
     );
-
-    revalidatePath("/inventory");
-    revalidatePath("/dashboard");
   } catch (error) {
-    console.error("DETALJNA GREŠKA PRI KREIRANJU:", error);
-    throw new Error("Failed to create product in database.");
+    // The product is already saved; a failed summary/email must not turn
+    // a successful create into an error page.
+    console.error("Post-create notification failed:", error);
   }
+
+  revalidatePath("/inventory");
+  revalidatePath("/dashboard");
 
   redirect("/inventory");
 }
@@ -240,8 +245,7 @@ export async function deleteManyProducts(ids: string[]) {
 
 export async function importProducts(products: any[]) {
   try {
-    const user = await getCurrentUser();
-    if (!user) throw new Error("User not found");
+    const user = await getDbUser();
 
     const result = await prisma.product.createMany({
       skipDuplicates: true,

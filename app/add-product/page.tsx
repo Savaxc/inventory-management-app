@@ -1,5 +1,6 @@
 import Sidebar from "@/components/sidebar";
 import { SubmitButton } from "@/components/submit-button";
+import { ActionForm } from "@/components/action-form";
 import { createProduct } from "@/lib/actions/products";
 import { getCurrentUser } from "@/lib/auth"; 
 import { prisma } from "@/lib/db";
@@ -43,7 +44,7 @@ export default async function AddProductPage() {
         </div>
 
         <div className="max-w-3xl mx-auto">
-          <form action={createProduct} className="space-y-6">
+          <ActionForm action={createProduct} className="space-y-6">
             <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
               <div className="px-6 py-4 border-b border-gray-50 bg-gray-50/50">
                 <h2 className="text-sm font-semibold text-gray-800 uppercase tracking-wider">
@@ -209,7 +210,7 @@ export default async function AddProductPage() {
               </Link>
               <SubmitButton text="Create Product" loadingText="Creating..." />
             </div>
-          </form>
+          </ActionForm>
         </div>
       </main>
     </div>

@@ -3,11 +3,12 @@
 import { auth } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
 import { prisma } from "../db";
+import { getDbUser } from "../auth";
 import { logActivity } from "../logger";
 
 export async function createCategory(name: string) {
-  const { userId } = await auth();
-  if (!userId) throw new Error("Unauthorized");
+  const dbUser = await getDbUser();
+  const userId = dbUser.id;
 
   const category = await prisma.category.create({
     data: {

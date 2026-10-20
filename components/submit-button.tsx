@@ -2,6 +2,7 @@
 
 import { useFormStatus } from "react-dom";
 import { Loader2 } from "lucide-react";
+import { useActionFormPending } from "./action-form";
 
 interface SubmitButtonProps {
   text: string;
@@ -9,7 +10,9 @@ interface SubmitButtonProps {
 }
 
 export function SubmitButton({ text, loadingText }: SubmitButtonProps) {
-  const { pending } = useFormStatus();
+  const { pending: formPending } = useFormStatus();
+  const actionPending = useActionFormPending();
+  const pending = actionPending ?? formPending;
 
   return (
     <button
