@@ -12,23 +12,31 @@ const STORAGE_KEY = "stock_app_assistant_messages"
 
 export function StockAssistantChat() {
   const [isOpen, setIsOpen] = useState(false)
-  const [messages, setMessages] = useState<Message[]>(() => {
-    if (typeof window !== "undefined") {
-      const saved = localStorage.getItem(STORAGE_KEY)
-      if (saved) {
-        try {
-          return JSON.parse(saved)
-        } catch (e) {
-          console.error("Greška pri učitavanju istorije poruka:", e)
-        }
-      }
-    }
-    return []
-  })
+  const [messages, setMessages] = useState<Message[]>([])
+  const [hydrated, setHydrated] = useState(false)
 
   const [input, setInput] = useState("")
   const [loading, setLoading] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
+
+  // Učitavanje istorije iz localStorage
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY)
+      if (saved) {
+        setMessages(JSON.parse(saved))
+      }
+    } catch (e) {
+      console.error("Greška pri učitavanju istorije poruka:", e)
+    }
+    setHydrated(true)
+  }, [])
+
+  // Čuvanje u localStorage (tek kad je učitavanje završeno)
+  useEffect(() => {
+    if (!hydrated) return
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(messages))
+  }, [messages, hydrated])
 
   // Automatsko skrolovanje na najnoviju poruku
   const scrollToBottom = () => {
@@ -41,18 +49,9 @@ export function StockAssistantChat() {
     }
   }, [messages, isOpen])
 
-  // Čuvanje u localStorage
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(messages))
-    }
-  }, [messages])
-
   const clearChat = () => {
     setMessages([])
-    if (typeof window !== "undefined") {
-      localStorage.removeItem(STORAGE_KEY)
-    }
+    localStorage.removeItem(STORAGE_KEY)
   }
 
   const sendMessage = async (e: React.FormEvent) => {
@@ -84,14 +83,15 @@ export function StockAssistantChat() {
         if (done) break
 
         buffer += decoder.decode(value, { stream: true })
-        const lines = buffer.split("\n\n")
-        buffer = lines.pop() || ""
+        const blocks = buffer.split("\n\n")
+        buffer = blocks.pop() || ""
 
-        let currentEventType = ""
-
-        for (const line of lines) {
-          const trimmed = line.trim()
+        for (const block of blocks) {
+          const trimmed = block.trim()
           if (!trimmed) continue
+
+          // Tip događaja se resetuje za svaki SSE blok
+          let currentEventType = ""
 
           const lineParts = trimmed.split("\n")
           for (const subLine of lineParts) {
@@ -106,7 +106,7 @@ export function StockAssistantChat() {
                   setMessages((prev) => [
                     ...prev.slice(0, -1),
                     { role: "tool", content: `Izvršavam alat: ${data}...` },
-                    { role: "assistant", content: "" }
+                    { role: "assistant", content: "" },
                   ])
                 } else if (currentEventType === "answer" || typeof data === "string") {
                   setMessages((prev) => {
@@ -135,7 +135,6 @@ export function StockAssistantChat() {
 
   return (
     <div className="fixed bottom-6 right-6 z-50">
-      {/* Otvoreni Chat Prozor */}
       {isOpen && (
         <div className="mb-4 w-80 md:w-96 h-[480px] bg-white rounded-2xl shadow-2xl border border-gray-100 flex flex-col overflow-hidden transition-all duration-300 animate-in fade-in slide-in-from-bottom-4">
           {/* Header */}
@@ -149,7 +148,7 @@ export function StockAssistantChat() {
                 <p className="text-[10px] text-purple-100">Mozaik AI (DeepSeek)</p>
               </div>
             </div>
-            
+
             <div className="flex items-center space-x-1">
               {messages.length > 0 && (
                 <button
@@ -226,7 +225,7 @@ export function StockAssistantChat() {
         </div>
       )}
 
-      {/* Plutajuće Dugme (Trigger) */}
+      {/* Dugme (Trigger) */}
       <button
         onClick={() => setIsOpen(!isOpen)}
         className="group relative bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white p-4 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center focus:outline-none ring-4 ring-purple-100 active:scale-95"
