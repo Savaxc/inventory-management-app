@@ -328,6 +328,12 @@ if [ "$SKIP_BOOTSTRAP" != "1" ]; then
   info "Running first deploy via SSM (build can take 10-20 minutes)"
   REMOTE="$(cat <<EOF
 set -euo pipefail
+if command -v cloud-init >/dev/null 2>&1; then
+  cloud-init status --wait || true
+fi
+if ! command -v git >/dev/null 2>&1; then
+  dnf install -y git
+fi
 export AWS_REGION='$AWS_REGION'
 export SSM_PATH='${SSM_PREFIX}/'
 export APP_DIR='$APP_DIR'
