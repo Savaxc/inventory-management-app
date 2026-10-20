@@ -10,16 +10,21 @@ import { auth, currentUser } from "@clerk/nextjs/server";
 import { checkAndSendLowStockAlert } from "../notifications";
 import { getDbUser } from "../auth";
 import { logActivity } from "../logger";
+import {
+  normalizeSku,
+  SKU_PATTERN,
+  SKU_VALIDATION_MESSAGE,
+} from "../sku";
 
 const ProductSchema = z.object({
   name: z.string().min(1, "Name is required"),
   sku: z
     .string()
-    .transform((val) => {
-      const trimmed = val.trim();
-      return trimmed === "" ? null : trimmed;
+    .transform((val) => normalizeSku(val))
+    .refine((val) => val === "" || SKU_PATTERN.test(val), {
+      message: SKU_VALIDATION_MESSAGE,
     })
-    .optional(),
+    .transform((val) => (val === "" ? null : val)),
   price: z.coerce.number().nonnegative("Price must be non-negative"),
   quantity: z.coerce.number().int().min(0, "Quantity must be non-negative"),
   lowStockAt: z.coerce.number().int().min(0).optional().default(5),
@@ -44,7 +49,7 @@ export async function createProduct(
 
   const validatedFields = ProductSchema.safeParse({
     name: formData.get("name"),
-    sku: formData.get("sku"),
+    sku: formData.get("sku") ?? "",
     price: formData.get("price"),
     quantity: formData.get("quantity"),
     lowStockAt: formData.get("lowStockAt") || undefined,
@@ -247,23 +252,36 @@ export async function importProducts(products: any[]) {
   try {
     const user = await getDbUser();
 
+    const data = products.map((p, index) => {
+      const name = p["Product Name"];
+      const rawSku = String(p["SKU"] ?? "").trim();
+      const sku =
+        rawSku === "" || rawSku.toUpperCase() === "N/A"
+          ? null
+          : normalizeSku(rawSku);
+
+      if (sku && !SKU_PATTERN.test(sku)) {
+        throw new Error(
+          `Row ${index + 2}: ${SKU_VALIDATION_MESSAGE} Received "${rawSku}".`
+        );
+      }
+
+      const price = parseFloat(p["Price"]) || 0;
+      const quantity = parseInt(p["Stock Quantity"]) || 0;
+
+      return {
+        name: name,
+        sku: sku,
+        price: price,
+        quantity: quantity,
+        lowStockAt: 5,
+        userId: user.id,
+      };
+    });
+
     const result = await prisma.product.createMany({
       skipDuplicates: true,
-      data: products.map((p) => {
-        const name = p["Product Name"];
-        const sku = p["SKU"] === "N/A" ? null : p["SKU"];
-        const price = parseFloat(p["Price"]) || 0;
-        const quantity = parseInt(p["Stock Quantity"]) || 0;
-
-        return {
-          name: name,
-          sku: sku || null,
-          price: price,
-          quantity: quantity,
-          lowStockAt: 5,
-          userId: user.id,
-        };
-      }),
+      data,
     });
 
     await logActivity(
@@ -279,6 +297,12 @@ export async function importProducts(products: any[]) {
     return { success: true, count: result.count };
   } catch (error) {
     console.error("Import error:", error);
-    return { success: false };
+    return {
+      success: false,
+      error:
+        error instanceof Error && error.message.startsWith("Row ")
+          ? error.message
+          : "Failed to import products. Check the CSV format.",
+    };
   }
 }

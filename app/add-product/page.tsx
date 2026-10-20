@@ -14,6 +14,12 @@ import {
   Tag,
 } from "lucide-react";
 import { CreateCategoryModal } from "@/components/create-category-modal";
+import {
+  SKU_EXAMPLE,
+  SKU_FORMAT_HINT,
+  SKU_PATTERN_HTML,
+  SKU_VALIDATION_MESSAGE,
+} from "@/lib/sku";
 
 export default async function AddProductPage() {
   const user = await getCurrentUser();
@@ -172,10 +178,18 @@ export default async function AddProductPage() {
                       type="text"
                       id="sku"
                       name="sku"
-                      placeholder="SKU-001"
+                      placeholder={SKU_EXAMPLE}
+                      pattern={SKU_PATTERN_HTML}
+                      title={SKU_VALIDATION_MESSAGE}
+                      maxLength={8}
+                      autoCapitalize="characters"
+                      spellCheck={false}
                       className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-4 focus:ring-purple-500/10 focus:border-purple-500 transition-all outline-none"
                     />
                   </div>
+                  <p className="mt-2 text-xs text-gray-500">
+                    Optional. Format: {SKU_EXAMPLE} ({SKU_FORMAT_HINT}).
+                  </p>
                 </div>
 
                 <div>

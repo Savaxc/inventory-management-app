@@ -6,6 +6,7 @@ import { FileUp, HelpCircle, Loader2 } from "lucide-react";
 import Papa from "papaparse";
 import { toast } from "sonner";
 import { importProducts } from "@/lib/actions/products";
+import { SKU_EXAMPLE } from "@/lib/sku";
 
 export function ImportCSVButton() {
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -34,7 +35,9 @@ export function ImportCSVButton() {
         if (res.success) {
           toast.success(`Successfully imported ${res.count} products!`);
         } else {
-          toast.error("Failed to import products. Check CSV format.");
+          toast.error(
+            res.error ?? "Failed to import products. Check CSV format."
+          );
         }
 
         setIsUploading(false);
@@ -51,7 +54,7 @@ export function ImportCSVButton() {
     const templateData = [
       {
         "Product Name": "Example Product",
-        "SKU": "SKU123",
+        "SKU": SKU_EXAMPLE,
         "Category": "Electronics",
         "Price": "99.99",
         "Stock Quantity": "10",
