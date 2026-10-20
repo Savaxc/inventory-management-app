@@ -1,0 +1,11 @@
+# Set APP_DOMAIN to the public hostname once DNS points at the Elastic IP,
+# e.g. APP_DOMAIN=stock.example.com. Caddy will then obtain and renew a
+# Let's Encrypt certificate automatically.
+#
+# Until then leave it unset (defaults to :80) or set it to the Elastic IP.
+# An IP address is served over plain HTTP because ACME cannot issue certs for IPs.
+
+{$APP_DOMAIN::80} {
+	encode zstd gzip
+	reverse_proxy app:3000
+}

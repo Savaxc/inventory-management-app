@@ -1,0 +1,103 @@
+name: stock
+
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-stock}
+      # Production always gets a random value from SSM. The default is only
+      # for local `docker compose up`.
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-stock}
+      POSTGRES_DB: ${POSTGRES_DB:-stock}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+    networks:
+      - internal
+
+  # One-off migration runner. Uses the prisma-base stage because it contains
+  # the Prisma CLI and schema (but not the Next.js build).
+  # Run with: docker compose run --rm migrate
+  migrate:
+    build:
+      context: .
+      target: prisma-base
+    command: ["npx", "prisma", "migrate", "deploy"]
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: ${APP_DATABASE_URL:-postgresql://${POSTGRES_USER:-stock}:${POSTGRES_PASSWORD:-stock}@db:5432/${POSTGRES_DB:-stock}?schema=public}
+    depends_on:
+      db:
+        condition: service_healthy
+    profiles: ["tools"]
+    networks:
+      - internal
+
+  app:
+    build:
+      context: .
+      args:
+        NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: ${NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY:?NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY is required}
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      NODE_ENV: production
+      PORT: "3000"
+      HOSTNAME: 0.0.0.0
+      # On EC2, fetch-env.sh copies SSM's DATABASE_URL into APP_DATABASE_URL.
+      # Locally it falls back to the db container.
+      DATABASE_URL: ${APP_DATABASE_URL:-postgresql://${POSTGRES_USER:-stock}:${POSTGRES_PASSWORD:-stock}@db:5432/${POSTGRES_DB:-stock}?schema=public}
+    depends_on:
+      db:
+        condition: service_healthy
+    expose:
+      - "3000"
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://127.0.0.1:3000/api/health').then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))",
+        ]
+      interval: 15s
+      timeout: 5s
+      start_period: 30s
+      retries: 5
+    networks:
+      - internal
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - "${HTTP_PORT:-80}:80"
+      - "${HTTPS_PORT:-443}:443"
+      - "${HTTPS_PORT:-443}:443/udp"
+    environment:
+      APP_DOMAIN: ${APP_DOMAIN:-:80}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      app:
+        condition: service_healthy
+    networks:
+      - internal
+
+volumes:
+  pgdata:
+  caddy_data:
+  caddy_config:
+
+networks:
+  internal:
+    driver: bridge
