@@ -42,6 +42,31 @@ if ! docker compose version >/dev/null 2>&1; then
 fi
 docker compose version
 
+# AL2023 ships buildx 0.12, but current Compose requires >= 0.17.
+buildx_minor="$(docker buildx version 2>/dev/null | awk '{print $2}' | cut -d. -f1,2)"
+case "$buildx_minor" in
+  0.1[7-9]|0.[2-9][0-9]|[1-9].*) ;;
+  *)
+    echo "==> Upgrading docker buildx (found: ${buildx_minor:-none})"
+    buildx_url="$(curl -fsSL https://api.github.com/repos/docker/buildx/releases/latest \
+      | grep -o 'https://[^"]*buildx-v[0-9.]*\.linux-amd64' | head -n 1)"
+    if [ -z "$buildx_url" ]; then
+      echo "Could not resolve the latest buildx release" >&2
+      exit 1
+    fi
+    mkdir -p /usr/local/lib/docker/cli-plugins
+    curl -fsSL "$buildx_url" -o /usr/local/lib/docker/cli-plugins/docker-buildx
+    chmod +x /usr/local/lib/docker/cli-plugins/docker-buildx
+    # Make sure the newly installed plugin wins over the distro copy.
+    installed="$(/usr/local/lib/docker/cli-plugins/docker-buildx version 2>/dev/null | awk '{print $2}')"
+    active="$(docker buildx version 2>/dev/null | awk '{print $2}')"
+    if [ "$installed" != "$active" ]; then
+      cp /usr/local/lib/docker/cli-plugins/docker-buildx /usr/libexec/docker/cli-plugins/docker-buildx
+    fi
+    ;;
+esac
+docker buildx version
+
 echo "==> Adding ${SWAP_SIZE} swap (next build is memory hungry)"
 if [ ! -f /swapfile ]; then
   fallocate -l "$SWAP_SIZE" /swapfile || dd if=/dev/zero of=/swapfile bs=1M count=2048 status=progress
