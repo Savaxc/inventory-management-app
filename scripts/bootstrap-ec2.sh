@@ -23,7 +23,7 @@ usermod -aG docker ec2-user 2>/dev/null || true
 # AWS CLI v2 (usually preinstalled on AL2023, but do not rely on it).
 if ! command -v aws >/dev/null 2>&1; then
   dnf install -y awscli-2 || dnf install -y awscli || {
-    dnf install -y unzip curl
+    dnf install -y unzip
     curl -fsSL "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o /tmp/awscliv2.zip
     unzip -q -o /tmp/awscliv2.zip -d /tmp
     /tmp/aws/install --update
@@ -35,7 +35,6 @@ if ! docker compose version >/dev/null 2>&1; then
   dnf install -y docker-compose-plugin >/dev/null 2>&1 || true
 fi
 if ! docker compose version >/dev/null 2>&1; then
-  dnf install -y curl
   mkdir -p /usr/local/lib/docker/cli-plugins
   curl -fsSL "https://github.com/docker/compose/releases/latest/download/docker-compose-linux-x86_64" \
     -o /usr/local/lib/docker/cli-plugins/docker-compose
