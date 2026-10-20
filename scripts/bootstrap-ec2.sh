@@ -69,7 +69,7 @@ echo "==> Building images"
 docker compose build
 
 echo "==> Running database migrations"
-docker compose run --rm migrate
+docker compose run --rm --build migrate
 
 echo "==> Starting containers"
 docker compose up -d --remove-orphans
