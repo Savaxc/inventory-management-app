@@ -12,6 +12,7 @@ const STORAGE_KEY = "stock_app_assistant_messages"
 
 export function StockAssistantChat() {
   const [isOpen, setIsOpen] = useState(false)
+  // Početno stanje je isto na serveru i klijentu (prazan niz) da ne bi bilo hydration greške
   const [messages, setMessages] = useState<Message[]>([])
   const [hydrated, setHydrated] = useState(false)
 
@@ -19,7 +20,7 @@ export function StockAssistantChat() {
   const [loading, setLoading] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
-  // Učitavanje istorije iz localStorage
+  // Učitavanje istorije iz localStorage (samo na klijentu, posle hidratacije)
   useEffect(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEY)
@@ -52,6 +53,10 @@ export function StockAssistantChat() {
   const clearChat = () => {
     setMessages([])
     localStorage.removeItem(STORAGE_KEY)
+    // Briše i serversku memoriju (agent u RAM-u + istorija u bazi)
+    fetch("/api/assistant", { method: "DELETE" }).catch((e) =>
+      console.error("Greška pri brisanju memorije asistenta:", e),
+    )
   }
 
   const sendMessage = async (e: React.FormEvent) => {
@@ -93,30 +98,44 @@ export function StockAssistantChat() {
           // Tip događaja se resetuje za svaki SSE blok
           let currentEventType = ""
 
-          const lineParts = trimmed.split("\n")
-          for (const subLine of lineParts) {
+          for (const subLine of trimmed.split("\n")) {
             if (subLine.startsWith("event: ")) {
               currentEventType = subLine.replace("event: ", "").trim()
             } else if (subLine.startsWith("data: ")) {
               try {
-                const jsonStr = subLine.replace("data: ", "")
-                const data = JSON.parse(jsonStr)
+                const data = JSON.parse(subLine.replace("data: ", ""))
 
                 if (currentEventType === "tool") {
-                  setMessages((prev) => [
-                    ...prev.slice(0, -1),
-                    { role: "tool", content: `Izvršavam alat: ${data}...` },
-                    { role: "assistant", content: "" },
-                  ])
-                } else if (currentEventType === "answer" || typeof data === "string") {
+                  setMessages((prev) => {
+                    const last = prev[prev.length - 1]
+                    const base =
+                      last?.role === "assistant" && last.content === "" ? prev.slice(0, -1) : prev
+                    return [
+                      ...base,
+                      { role: "tool", content: `Izvršavam alat: ${data}...` },
+                      { role: "assistant", content: "" },
+                    ]
+                  })
+                } else if (currentEventType === "delta") {
+                  // Streaming: dopisuj tekst u poslednju poruku asistenta
                   setMessages((prev) => {
                     const copy = [...prev]
-                    copy[copy.length - 1] = { role: "assistant", content: data }
+                    const last = copy[copy.length - 1]
+                    if (last?.role === "assistant") {
+                      copy[copy.length - 1] = { ...last, content: last.content + String(data) }
+                    }
+                    return copy
+                  })
+                } else if (currentEventType === "answer") {
+                  // Finalni tekst zamenjuje ono što je stiglo kroz delta događaje
+                  setMessages((prev) => {
+                    const copy = [...prev]
+                    copy[copy.length - 1] = { role: "assistant", content: String(data) }
                     return copy
                   })
                 }
-              } catch (e) {
-                console.error("Greška pri parsiranju SSE data:", e)
+              } catch (err) {
+                console.error("Greška pri parsiranju SSE data:", err)
               }
             }
           }
@@ -130,8 +149,13 @@ export function StockAssistantChat() {
       ])
     } finally {
       setLoading(false)
+      // Ukloni eventualne prazne balončiće (npr. prekinut stream)
+      setMessages((prev) => prev.filter((m) => !(m.role === "assistant" && m.content === "")))
     }
   }
+
+  const lastMessage = messages[messages.length - 1]
+  const showThinking = loading && !(lastMessage?.role === "assistant" && lastMessage.content)
 
   return (
     <div className="fixed bottom-6 right-6 z-50">
@@ -196,7 +220,7 @@ export function StockAssistantChat() {
                 </div>
               </div>
             ))}
-            {loading && (
+            {showThinking && (
               <div className="flex items-center space-x-2 text-purple-600 text-[11px] bg-white border border-purple-100 p-2.5 rounded-xl w-max shadow-sm">
                 <Bot className="w-4 h-4 animate-bounce text-purple-600" />
                 <span>Asistent analizira podatke...</span>
