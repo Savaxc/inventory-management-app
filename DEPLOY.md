@@ -118,6 +118,14 @@ HEALTH_URL=http://<elastic-ip>/api/health INSTANCE_ID=i-... ./deploy.sh
 also be started manually from the Actions tab. It uses GitHub OIDC, so no
 long-lived AWS access keys are stored in GitHub.
 
+The `deploy` job targets the GitHub environment `production`, which has
+`Savaxc` as a required reviewer. A push or manual run pauses at **Waiting for
+approval**; approve it in **Actions → Review deployments**. The IAM role trusts
+only `repo:Savaxc/inventory-management-app:environment:production`, so an
+unapproved job cannot assume the AWS role. Self-review is currently allowed;
+enable **Prevent self-review** in the environment settings if a second
+maintainer is added.
+
 One-time setup (the AWS SSO session must be active):
 
 ```bash
@@ -129,7 +137,7 @@ The script creates/reuses:
 
 - the GitHub OIDC provider in IAM
 - IAM role `stock-github-actions-deploy`, trusted only for
-  `repo:Savaxc/inventory-management-app:ref:refs/heads/master`
+  `repo:Savaxc/inventory-management-app:environment:production`
 - an inline policy that allows `ssm:SendCommand` on the app instance and
   `ssm:GetCommandInvocation` for reading the deploy result
 - the `AWS_ROLE_ARN` repository secret, when `gh` is authenticated locally

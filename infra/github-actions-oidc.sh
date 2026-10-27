@@ -7,10 +7,11 @@
 #
 # Optional env:
 #   AWS_REGION    (default eu-west-1)
-#   GITHUB_REPO   (default Savaxc/inventory-management-app)
-#   ROLE_NAME     (default stock-github-actions-deploy)
-#   INSTANCE_ID   (default i-062afca8fa2a194bd)
-#   SET_GH_SECRET (default 1; set to 0 to skip `gh secret set`)
+#   GITHUB_REPO        (default Savaxc/inventory-management-app)
+#   GITHUB_ENVIRONMENT (default production)
+#   ROLE_NAME          (default stock-github-actions-deploy)
+#   INSTANCE_ID        (default i-062afca8fa2a194bd)
+#   SET_GH_SECRET      (default 1; set to 0 to skip `gh secret set`)
 set -euo pipefail
 
 if ! command -v aws >/dev/null 2>&1 && [ -x "$HOME/.local/bin/aws" ]; then
@@ -24,6 +25,7 @@ fi
 
 AWS_REGION="${AWS_REGION:-eu-west-1}"
 GITHUB_REPO="${GITHUB_REPO:-Savaxc/inventory-management-app}"
+GITHUB_ENVIRONMENT="${GITHUB_ENVIRONMENT:-production}"
 ROLE_NAME="${ROLE_NAME:-stock-github-actions-deploy}"
 INSTANCE_ID="${INSTANCE_ID:-i-062afca8fa2a194bd}"
 SET_GH_SECRET="${SET_GH_SECRET:-1}"
@@ -38,6 +40,7 @@ trap 'rm -rf "$tmpdir"' EXIT
 echo "==> AWS account: $ACCOUNT_ID"
 echo "==> Region: $AWS_REGION"
 echo "==> GitHub repo: $GITHUB_REPO"
+echo "==> GitHub environment: $GITHUB_ENVIRONMENT"
 echo "==> EC2 instance: $INSTANCE_ID"
 
 echo "==> Ensuring GitHub OIDC provider exists"
@@ -52,11 +55,11 @@ else
   echo "OIDC provider created."
 fi
 
-python3 - "$ACCOUNT_ID" "$GITHUB_REPO" > "$tmpdir/trust.json" <<'PY'
+python3 - "$ACCOUNT_ID" "$GITHUB_REPO" "$GITHUB_ENVIRONMENT" > "$tmpdir/trust.json" <<'PY'
 import json
 import sys
 
-account_id, github_repo = sys.argv[1], sys.argv[2]
+account_id, github_repo, github_environment = sys.argv[1], sys.argv[2], sys.argv[3]
 print(json.dumps({
     "Version": "2012-10-17",
     "Statement": [{
@@ -68,7 +71,7 @@ print(json.dumps({
         "Condition": {
             "StringEquals": {
                 "token.actions.githubusercontent.com:aud": "sts.amazonaws.com",
-                "token.actions.githubusercontent.com:sub": f"repo:{github_repo}:ref:refs/heads/master"
+                "token.actions.githubusercontent.com:sub": f"repo:{github_repo}:environment:{github_environment}"
             }
         }
     }]
