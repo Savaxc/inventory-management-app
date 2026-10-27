@@ -112,6 +112,41 @@ REFRESH_ENV=1 INSTANCE_ID=i-... ./deploy.sh   # re-read SSM parameters into .env
 HEALTH_URL=http://<elastic-ip>/api/health INSTANCE_ID=i-... ./deploy.sh
 ```
 
+## GitHub Actions deploy
+
+`.github/workflows/deploy-aws.yml` deploys on every push to `master` and can
+also be started manually from the Actions tab. It uses GitHub OIDC, so no
+long-lived AWS access keys are stored in GitHub.
+
+One-time setup (the AWS SSO session must be active):
+
+```bash
+aws sso login --profile stock
+AWS_PROFILE=stock ./infra/github-actions-oidc.sh
+```
+
+The script creates/reuses:
+
+- the GitHub OIDC provider in IAM
+- IAM role `stock-github-actions-deploy`, trusted only for
+  `repo:Savaxc/inventory-management-app:ref:refs/heads/master`
+- an inline policy that allows `ssm:SendCommand` on the app instance and
+  `ssm:GetCommandInvocation` for reading the deploy result
+- the `AWS_ROLE_ARN` repository secret, when `gh` is authenticated locally
+
+Repository settings used by the workflow:
+
+| Name | Type | Default |
+| --- | --- | --- |
+| `AWS_ROLE_ARN` | Secret (required) | set by the setup script |
+| `AWS_REGION` | Variable (optional) | `eu-west-1` |
+| `INSTANCE_ID` | Variable (optional) | `i-062afca8fa2a194bd` |
+| `HEALTH_URL` | Variable (optional) | `http://52.211.55.184/api/health` |
+
+Use **Run workflow** with `refresh_env` enabled when SSM parameters have
+changed. If `AWS_ROLE_ARN` is not configured, the workflow logs a warning and
+skips the deploy instead of failing.
+
 ## Domain and HTTPS
 
 Until a domain exists the app is served over plain HTTP on the Elastic IP.

@@ -1,0 +1,65 @@
+name: Deploy to AWS
+
+on:
+  push:
+    branches:
+      - master
+  workflow_dispatch:
+    inputs:
+      refresh_env:
+        description: "Re-read SSM parameters into .env"
+        required: false
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: stock-production-deploy
+  cancel-in-progress: false
+
+env:
+  AWS_REGION: ${{ vars.AWS_REGION || 'eu-west-1' }}
+  INSTANCE_ID: ${{ vars.INSTANCE_ID || 'i-062afca8fa2a194bd' }}
+  HEALTH_URL: ${{ vars.HEALTH_URL || 'http://52.211.55.184/api/health' }}
+
+jobs:
+  deploy:
+    name: Deploy through AWS SSM
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+
+      - name: Check AWS OIDC configuration
+        id: aws-config
+        env:
+          AWS_ROLE_ARN: ${{ secrets.AWS_ROLE_ARN }}
+        run: |
+          if [ -z "$AWS_ROLE_ARN" ]; then
+            echo "::warning::AWS_ROLE_ARN is not set. Run infra/github-actions-oidc.sh once, then re-run this workflow."
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "configured=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Configure AWS credentials
+        if: steps.aws-config.outputs.configured == 'true'
+        uses: aws-actions/configure-aws-credentials@v6
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          role-session-name: github-actions-stock-deploy
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Deploy through SSM
+        if: steps.aws-config.outputs.configured == 'true'
+        env:
+          REFRESH_ENV: ${{ inputs.refresh_env && '1' || '0' }}
+          BRANCH: master
+        run: |
+          chmod +x deploy.sh
+          ./deploy.sh
