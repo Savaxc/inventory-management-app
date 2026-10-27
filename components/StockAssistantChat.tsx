@@ -2,13 +2,85 @@
 
 import { useState, useEffect, useRef } from "react"
 import { Bot, X, Send, Trash2, Sparkles } from "lucide-react"
+import { confirmStockUpdate } from "@/app/actions/stock"
+import { StockUpdateApprovalCard } from "@/components/stock-update-approval-card"
+import {
+  isStockUpdateProposal,
+  type StockUpdateProposal,
+  type StockUpdateProposalStatus,
+} from "@/lib/assistant/proposals"
 
-interface Message {
+interface TextMessage {
   role: "user" | "assistant" | "tool"
   content: string
 }
 
+interface ProposalMessage {
+  role: "proposal"
+  id: string
+  proposal: StockUpdateProposal
+  status: StockUpdateProposalStatus
+  error?: string
+}
+
+type Message = TextMessage | ProposalMessage
+
 const STORAGE_KEY = "stock_app_assistant_messages"
+
+const TOOL_LABELS: Record<string, string> = {
+  find_products: "Pretražujem proizvode",
+  get_low_stock: "Proveravam zalihe na izmaku",
+  get_inventory_summary: "Računam sumu zaliha",
+  get_recent_activity: "Čitam dnevnik aktivnosti",
+  generate_restock_plan: "Pripremam plan dopune",
+  propose_stock_update: "Pripremam predlog izmene zaliha",
+}
+
+function isProposalStatus(value: unknown): value is StockUpdateProposalStatus {
+  return (
+    value === "pending" ||
+    value === "approved" ||
+    value === "rejected" ||
+    value === "error"
+  )
+}
+
+function normalizeStoredMessages(value: unknown): Message[] {
+  if (!Array.isArray(value)) return []
+
+  return value.flatMap((item): Message[] => {
+    if (!item || typeof item !== "object") return []
+    const message = item as Record<string, unknown>
+
+    if (
+      (message.role === "user" ||
+        message.role === "assistant" ||
+        message.role === "tool") &&
+      typeof message.content === "string"
+    ) {
+      return [{ role: message.role, content: message.content }]
+    }
+
+    if (
+      message.role === "proposal" &&
+      typeof message.id === "string" &&
+      isStockUpdateProposal(message.proposal) &&
+      isProposalStatus(message.status)
+    ) {
+      return [
+        {
+          role: "proposal",
+          id: message.id,
+          proposal: message.proposal,
+          status: message.status,
+          error: typeof message.error === "string" ? message.error : undefined,
+        },
+      ]
+    }
+
+    return []
+  })
+}
 
 export function StockAssistantChat() {
   const [isOpen, setIsOpen] = useState(false)
@@ -18,6 +90,7 @@ export function StockAssistantChat() {
 
   const [input, setInput] = useState("")
   const [loading, setLoading] = useState(false)
+  const [approvingId, setApprovingId] = useState<string | null>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
   // Učitavanje istorije iz localStorage (samo na klijentu, posle hidratacije)
@@ -25,7 +98,7 @@ export function StockAssistantChat() {
     try {
       const saved = localStorage.getItem(STORAGE_KEY)
       if (saved) {
-        setMessages(JSON.parse(saved))
+        setMessages(normalizeStoredMessages(JSON.parse(saved)))
       }
     } catch (e) {
       console.error("Greška pri učitavanju istorije poruka:", e)
@@ -36,7 +109,11 @@ export function StockAssistantChat() {
   // Čuvanje u localStorage (tek kad je učitavanje završeno)
   useEffect(() => {
     if (!hydrated) return
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(messages))
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(messages))
+    } catch (e) {
+      console.error("Greška pri čuvanju istorije poruka:", e)
+    }
   }, [messages, hydrated])
 
   // Automatsko skrolovanje na najnoviju poruku
@@ -52,11 +129,73 @@ export function StockAssistantChat() {
 
   const clearChat = () => {
     setMessages([])
+    setApprovingId(null)
     localStorage.removeItem(STORAGE_KEY)
     // Briše i serversku memoriju (agent u RAM-u + istorija u bazi)
     fetch("/api/assistant", { method: "DELETE" }).catch((e) =>
       console.error("Greška pri brisanju memorije asistenta:", e),
     )
+  }
+
+  const setProposalStatus = (
+    id: string,
+    status: StockUpdateProposalStatus,
+    error?: string,
+  ) => {
+    setMessages((prev) =>
+      prev.map((message) =>
+        message.role === "proposal" && message.id === id
+          ? { ...message, status, error }
+          : message,
+      ),
+    )
+  }
+
+  const handleApprove = async (message: ProposalMessage) => {
+    if (
+      approvingId ||
+      (message.status !== "pending" && message.status !== "error")
+    ) {
+      return
+    }
+
+    setApprovingId(message.id)
+    setProposalStatus(message.id, "pending")
+
+    try {
+      const result = await confirmStockUpdate(
+        message.proposal.productId,
+        message.proposal.newQuantity,
+        message.proposal.reason,
+        message.proposal.oldQuantity,
+      )
+
+      if (result.success) {
+        setProposalStatus(message.id, "approved")
+      } else {
+        setProposalStatus(message.id, "error", result.error)
+      }
+    } catch (err) {
+      console.error("Greška pri odobravanju izmene zaliha:", err)
+      setProposalStatus(
+        message.id,
+        "error",
+        "Izmena nije primenjena. Pokušaj ponovo.",
+      )
+    } finally {
+      setApprovingId(null)
+    }
+  }
+
+  const handleReject = (message: ProposalMessage) => {
+    if (
+      approvingId ||
+      (message.status !== "pending" && message.status !== "error")
+    ) {
+      return
+    }
+
+    setProposalStatus(message.id, "rejected")
   }
 
   const sendMessage = async (e: React.FormEvent) => {
@@ -106,13 +245,66 @@ export function StockAssistantChat() {
                 const data = JSON.parse(subLine.replace("data: ", ""))
 
                 if (currentEventType === "tool") {
+                  const toolName = String(data)
+                  const toolLabel =
+                    TOOL_LABELS[toolName] ?? `Izvršavam alat: ${toolName}`
+
                   setMessages((prev) => {
                     const last = prev[prev.length - 1]
                     const base =
-                      last?.role === "assistant" && last.content === "" ? prev.slice(0, -1) : prev
+                      last?.role === "assistant" && last.content === ""
+                        ? prev.slice(0, -1)
+                        : prev
                     return [
                       ...base,
-                      { role: "tool", content: `Izvršavam alat: ${data}...` },
+                      { role: "tool", content: `${toolLabel}...` },
+                      { role: "assistant", content: "" },
+                    ]
+                  })
+                } else if (currentEventType === "proposal") {
+                  if (!isStockUpdateProposal(data)) continue
+
+                  const raw = data as unknown as Record<string, unknown>
+                  const proposalId =
+                    typeof raw.proposalId === "string" && raw.proposalId
+                      ? raw.proposalId
+                      : `${Date.now()}-${Math.random().toString(36).slice(2)}`
+
+                  const proposal: StockUpdateProposal = {
+                    action: data.action,
+                    productId: data.productId,
+                    productName: data.productName,
+                    sku: data.sku ?? null,
+                    oldQuantity: data.oldQuantity,
+                    newQuantity: data.newQuantity,
+                    reason: data.reason,
+                  }
+
+                  setMessages((prev) => {
+                    if (
+                      prev.some(
+                        (message) =>
+                          message.role === "proposal" &&
+                          message.id === proposalId,
+                      )
+                    ) {
+                      return prev
+                    }
+
+                    const last = prev[prev.length - 1]
+                    const base =
+                      last?.role === "assistant" && last.content === ""
+                        ? prev.slice(0, -1)
+                        : prev
+
+                    return [
+                      ...base,
+                      {
+                        role: "proposal",
+                        id: proposalId,
+                        proposal,
+                        status: "pending",
+                      },
                       { role: "assistant", content: "" },
                     ]
                   })
@@ -122,7 +314,12 @@ export function StockAssistantChat() {
                     const copy = [...prev]
                     const last = copy[copy.length - 1]
                     if (last?.role === "assistant") {
-                      copy[copy.length - 1] = { ...last, content: last.content + String(data) }
+                      copy[copy.length - 1] = {
+                        ...last,
+                        content: last.content + String(data),
+                      }
+                    } else {
+                      copy.push({ role: "assistant", content: String(data) })
                     }
                     return copy
                   })
@@ -130,7 +327,15 @@ export function StockAssistantChat() {
                   // Finalni tekst zamenjuje ono što je stiglo kroz delta događaje
                   setMessages((prev) => {
                     const copy = [...prev]
-                    copy[copy.length - 1] = { role: "assistant", content: String(data) }
+                    const last = copy[copy.length - 1]
+                    if (last?.role === "assistant") {
+                      copy[copy.length - 1] = {
+                        role: "assistant",
+                        content: String(data),
+                      }
+                    } else {
+                      copy.push({ role: "assistant", content: String(data) })
+                    }
                     return copy
                   })
                 }
@@ -150,12 +355,21 @@ export function StockAssistantChat() {
     } finally {
       setLoading(false)
       // Ukloni eventualne prazne balončiće (npr. prekinut stream)
-      setMessages((prev) => prev.filter((m) => !(m.role === "assistant" && m.content === "")))
+      setMessages((prev) =>
+        prev.filter(
+          (message) =>
+            !(message.role === "assistant" && message.content === ""),
+        ),
+      )
     }
   }
 
   const lastMessage = messages[messages.length - 1]
-  const showThinking = loading && !(lastMessage?.role === "assistant" && lastMessage.content)
+  const showThinking =
+    loading && !(lastMessage?.role === "assistant" && lastMessage.content)
+  const hasPendingApproval = messages.some(
+    (message) => message.role === "proposal" && message.status === "pending",
+  )
 
   return (
     <div className="fixed bottom-6 right-6 z-50">
@@ -202,24 +416,41 @@ export function StockAssistantChat() {
               </div>
             )}
 
-            {messages.map((m, idx) => (
-              <div
-                key={idx}
-                className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}
-              >
+            {messages.map((m, idx) => {
+              if (m.role === "proposal") {
+                return (
+                  <div key={m.id} className="w-full">
+                    <StockUpdateApprovalCard
+                      proposal={m.proposal}
+                      status={m.status}
+                      error={m.error}
+                      isSubmitting={approvingId === m.id}
+                      onApprove={() => handleApprove(m)}
+                      onReject={() => handleReject(m)}
+                    />
+                  </div>
+                )
+              }
+
+              return (
                 <div
-                  className={`max-w-[85%] p-3 rounded-2xl ${
-                    m.role === "user"
-                      ? "bg-purple-600 text-white rounded-br-none shadow-sm"
-                      : m.role === "tool"
-                      ? "bg-gray-200/80 text-gray-600 italic text-[11px] text-center w-full py-1.5"
-                      : "bg-white text-gray-800 border border-gray-100 shadow-sm rounded-bl-none"
-                  }`}
+                  key={`${m.role}-${idx}`}
+                  className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}
                 >
-                  <p className="whitespace-pre-wrap leading-relaxed">{m.content}</p>
+                  <div
+                    className={`max-w-[85%] p-3 rounded-2xl ${
+                      m.role === "user"
+                        ? "bg-purple-600 text-white rounded-br-none shadow-sm"
+                        : m.role === "tool"
+                        ? "bg-gray-200/80 text-gray-600 italic text-[11px] text-center w-full py-1.5"
+                        : "bg-white text-gray-800 border border-gray-100 shadow-sm rounded-bl-none"
+                    }`}
+                  >
+                    <p className="whitespace-pre-wrap leading-relaxed">{m.content}</p>
+                  </div>
                 </div>
-              </div>
-            ))}
+              )
+            })}
             {showThinking && (
               <div className="flex items-center space-x-2 text-purple-600 text-[11px] bg-white border border-purple-100 p-2.5 rounded-xl w-max shadow-sm">
                 <Bot className="w-4 h-4 animate-bounce text-purple-600" />
@@ -259,9 +490,15 @@ export function StockAssistantChat() {
         ) : (
           <>
             <Bot className="w-6 h-6" />
-            {/* Indikator ako ima poruka */}
+            {/* Indikator ako ima poruka / predloga koji čeka odobrenje */}
             {messages.length > 0 && (
-              <span className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-green-500 border-2 border-white rounded-full"></span>
+              <span
+                className={`absolute -top-1 -right-1 w-3.5 h-3.5 border-2 border-white rounded-full ${
+                  hasPendingApproval
+                    ? "bg-amber-400 animate-pulse"
+                    : "bg-green-500"
+                }`}
+              ></span>
             )}
           </>
         )}

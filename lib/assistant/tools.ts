@@ -234,7 +234,7 @@ export function stockTools(userId: string): Tool[] {
       type: "function",
       name: "propose_stock_update",
       description:
-        "Predlaže izmenu stanja za proizvod. Ne menja bazu direktno, već vraća strukturu predloga koju korisnik potvrđuje u UI-ju.",
+        "Predlaže izmenu stanja za proizvod. Ne menja bazu direktno, već vraća strukturu predloga koja se korisniku prikazuje kao kartica za odobrenje. Nikada ne tvrdi da je izmena već izvršena.",
       strict: true,
       parameters: {
         type: "object",
@@ -252,13 +252,22 @@ export function stockTools(userId: string): Tool[] {
         });
         if (!product) throw new Error("Proizvod nije pronađen.");
 
+        if (!Number.isInteger(newQuantity) || newQuantity < 0) {
+          throw new Error("Količina mora biti ceo broj veći ili jednak 0.");
+        }
+
+        const normalizedReason =
+          typeof reason === "string" ? reason.trim().slice(0, 500) : "";
+        if (!normalizedReason) throw new Error("Razlog izmene je obavezan.");
+
         return {
-          action: "PROPOSE_UPDATE",
+          action: "PROPOSE_UPDATE" as const,
           productId,
           productName: product.name,
+          sku: product.sku,
           oldQuantity: product.quantity,
           newQuantity,
-          reason,
+          reason: normalizedReason,
         };
       },
     },

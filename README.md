@@ -30,6 +30,7 @@ Stock.app is a modern, high-performance inventory management solution built for 
 - **Automated Alerts**: Email notifications powered by **Resend** for products falling below custom thresholds.
 - **Minimalist UX**: Clean, distraction-free interface with a focus on usability and fast data entry.
 - **Robust Security**: Authentication and user-specific data isolation powered by Clerk.
+- **AI Stock Assistant with Approval**: Ask the assistant about stock levels; any proposed stock change appears as an approval card and is written only after explicit confirmation.
 - **Advanced Reporting**: Generate professional **PDF Valuation Reports** and export full inventory data to **CSV** with a single click.
 - **Bulk Import**: Quickly populate your database using the **CSV Import** tool with a downloadable template to ensure data consistency.
 - **Smart Category Management**: 

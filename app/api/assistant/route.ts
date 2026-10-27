@@ -3,7 +3,8 @@ import { auth } from "@clerk/nextjs/server"
 import { createHuman, SituationSpecification, type SituationContext } from "@mozaik-ai/core"
 import { rt, agentFor, resetAgent } from "@/lib/assistant/runtime"
 import { createToolGuard } from "@/lib/assistant/guard"
-import { extractAnswerText, extractTextDelta } from "@/lib/assistant/utils"
+import { isStockUpdateProposal } from "@/lib/assistant/proposals"
+import { extractAnswerText, extractTextDelta, extractToolOutput } from "@/lib/assistant/utils"
 
 export const runtime = "nodejs"
 
@@ -20,6 +21,7 @@ class FromAgent extends SituationSpecification {
       event.producerId === this.agentId &&
       (event.type === "inference.stream" ||
         event.type === "function_call.started" ||
+        event.type === "function_call.completed" ||
         event.type === "model.answer")
     )
   }
@@ -100,6 +102,19 @@ export async function POST(req: Request) {
                     buffered = ""
                     send("tool", p?.call?.name ?? "alat")
                     break
+                  case "function_call.completed": {
+                    const result = extractToolOutput(p)
+                    if (isStockUpdateProposal(result)) {
+                      const proposalId =
+                        typeof p?.callId === "string" && p.callId
+                          ? p.callId
+                          : typeof p?.item?.callId === "string" && p.item.callId
+                            ? p.item.callId
+                            : crypto.randomUUID()
+                      send("proposal", { ...result, proposalId })
+                    }
+                    break
+                  }
                   case "model.answer":
                     send("answer", extractAnswerText(p) || buffered || "Odgovor je uspešno generisan.")
                     finish()

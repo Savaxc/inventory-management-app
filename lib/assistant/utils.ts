@@ -29,6 +29,26 @@ export function extractTextDelta(inner: any): string {
   return typeof content === "string" ? content : ""
 }
 
+/** JSON rezultat završenog poziva alata iz function_call.completed događaja. */
+export function extractToolOutput(payload: any): unknown {
+  const item = payload?.item ?? payload
+  const output = item?.output
+  const text =
+    typeof output === "string"
+      ? output
+      : typeof output?.text === "string"
+        ? output.text
+        : ""
+
+  if (!text) return null
+
+  try {
+    return JSON.parse(text)
+  } catch {
+    return null
+  }
+}
+
 export function safeStringify(value: unknown, max = 500): string {
   try {
     return JSON.stringify(value).slice(0, max)
