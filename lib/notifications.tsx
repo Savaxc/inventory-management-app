@@ -2,6 +2,9 @@ import { Resend } from 'resend';
 import { LowStockEmailTemplate } from '@/components/emails/low-stock-template';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
+const resendFrom =
+  process.env.RESEND_FROM_EMAIL?.trim() ||
+  'StockApp <onboarding@resend.dev>';
 
 export async function checkAndSendLowStockAlert(
   userEmail: string,
@@ -15,7 +18,7 @@ export async function checkAndSendLowStockAlert(
   if (quantity <= threshold) {
     try {
       await resend.emails.send({
-        from: 'StockApp <onboarding@resend.dev>', // domen add later
+        from: resendFrom,
         to: userEmail,
         subject: `⚠️ Low Stock Alert: ${productName}`,
         react: (

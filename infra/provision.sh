@@ -49,6 +49,7 @@ POSTGRES_USER="${POSTGRES_USER:-stock}"
 POSTGRES_DB="${POSTGRES_DB:-stock}"
 OPENAI_BASE_URL="${OPENAI_BASE_URL:-https://api.deepseek.com/v1}"
 ASSISTANT_MODEL="${ASSISTANT_MODEL:-deepseek-v4-flash}"
+RESEND_FROM_EMAIL="${RESEND_FROM_EMAIL:-}"
 APP_DOMAIN="${APP_DOMAIN:-}"
 ACME_EMAIL="${ACME_EMAIL:-}"
 SKIP_BOOTSTRAP="${SKIP_BOOTSTRAP:-0}"
@@ -82,6 +83,16 @@ if [ -z "${POSTGRES_PASSWORD:-}" ]; then
   POSTGRES_PASSWORD="$(openssl rand -hex 24)"
   info "Generated a new Postgres password"
 fi
+
+# Preserve a verified sender address on re-runs unless explicitly overridden.
+if [ -z "$RESEND_FROM_EMAIL" ]; then
+  RESEND_FROM_EMAIL="$(aws ssm get-parameter \
+    --region "$AWS_REGION" \
+    --name "${SSM_PREFIX}/RESEND_FROM_EMAIL" \
+    --query Parameter.Value \
+    --output text 2>/dev/null || true)"
+fi
+RESEND_FROM_EMAIL="${RESEND_FROM_EMAIL:-StockApp <onboarding@resend.dev>}"
 
 # URL-encode the password for DATABASE_URL.
 if command -v python3 >/dev/null 2>&1; then
@@ -168,6 +179,7 @@ put_param POSTGRES_DB "$POSTGRES_DB" String
 put_param CLERK_SECRET_KEY "$CLERK_SECRET_KEY" SecureString
 put_param NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY "$NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY" SecureString
 put_param RESEND_API_KEY "$RESEND_API_KEY" SecureString
+put_param RESEND_FROM_EMAIL "$RESEND_FROM_EMAIL" String
 put_param OPENAI_API_KEY "$OPENAI_API_KEY" SecureString
 put_param OPENAI_BASE_URL "$OPENAI_BASE_URL" String
 put_param ASSISTANT_MODEL "$ASSISTANT_MODEL" String

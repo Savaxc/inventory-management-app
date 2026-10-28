@@ -85,6 +85,7 @@ At the end it prints the instance ID, Elastic IP and URL.
 | `/stock/CLERK_SECRET_KEY` | SecureString |
 | `/stock/NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` | SecureString |
 | `/stock/RESEND_API_KEY` | SecureString |
+| `/stock/RESEND_FROM_EMAIL` | String (optional) |
 | `/stock/OPENAI_API_KEY` | SecureString |
 | `/stock/OPENAI_BASE_URL` | String |
 | `/stock/ASSISTANT_MODEL` | String |
@@ -154,6 +155,41 @@ Repository settings used by the workflow:
 Use **Run workflow** with `refresh_env` enabled when SSM parameters have
 changed. If `AWS_ROLE_ARN` is not configured, the workflow logs a warning and
 skips the deploy instead of failing.
+
+## Rotating secrets and adding Resend
+
+Never paste a secret into chat, a GitHub issue, or a commit. Use the hidden-input
+helper; it writes the value to SSM as `SecureString`, updates the local `.env`
+with mode `600`, and never prints the value:
+
+```bash
+./scripts/set-secret.sh OPENAI_API_KEY
+./scripts/set-secret.sh RESEND_API_KEY --deploy
+```
+
+`--deploy` starts the GitHub Actions workflow with `refresh_env=true`; approve
+the production deployment in GitHub.
+
+### OpenAI / DeepSeek key rotation
+
+1. Open <https://platform.deepseek.com/api_keys>.
+2. Create a new key, then revoke the old one.
+3. Run `./scripts/set-secret.sh OPENAI_API_KEY --deploy`.
+
+### Resend
+
+1. Open <https://resend.com/api-keys>.
+2. Create a **Sending access** key and copy it once.
+3. Run `./scripts/set-secret.sh RESEND_API_KEY --deploy`.
+
+Without a verified domain, Resend's `onboarding@resend.dev` sender can only
+deliver to the email address registered on the Resend account. To send to other
+users, verify a domain in Resend, then set the sender and redeploy:
+
+```bash
+aws ssm put-parameter --region eu-west-1 --name /stock/RESEND_FROM_EMAIL \
+  --type String --value 'StockApp <alerts@your-domain.com>' --overwrite
+```
 
 ## Domain and HTTPS
 
