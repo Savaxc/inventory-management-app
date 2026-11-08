@@ -75,18 +75,18 @@ export function EditProductModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px] rounded-2xl p-8 border-none shadow-2xl overflow-y-auto max-h-[90vh]">
+      <DialogContent className="rounded-2xl border-none p-5 shadow-2xl sm:max-w-[425px] sm:p-8">
         <DialogHeader>
-          <DialogTitle className="text-2xl font-bold text-gray-900">
+          <DialogTitle className="text-xl font-bold text-gray-900 sm:text-2xl">
             Edit Product Details
           </DialogTitle>
-          <DialogDescription className="text-gray-600 text-lg">
+          <DialogDescription className="text-sm text-gray-600 sm:text-lg">
             <br/>
             <strong>{product.name}</strong>
           </DialogDescription>
         </DialogHeader>
 
-        <div className="grid gap-5 py-6">
+        <div className="grid gap-5 py-5 sm:py-6">
           {/* Category Select Field */}
           <div className="grid gap-2">
             <Label
@@ -115,7 +115,7 @@ export function EditProductModal({
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div className="grid gap-2">
               <Label
                 htmlFor="price"

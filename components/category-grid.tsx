@@ -23,20 +23,20 @@ export function CategoryGrid({ initialCategories }: { initialCategories: any[] }
   return (
     <div className="space-y-6">
       {/* Search and Sort */}
-      <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
+      <div className="flex flex-col items-stretch justify-between gap-4 md:flex-row md:items-center">
         <div className="relative w-full md:w-96">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
           <input
             type="text"
             placeholder="Search categories..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition-all text-sm"
+            className="w-full rounded-xl border border-gray-200 bg-white py-2 pl-10 pr-4 text-sm transition-all focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-500/20"
           />
         </div>
 
-        <div className="flex items-center gap-2 w-full md:w-auto">
-          <span className="text-xs font-medium text-gray-500 uppercase tracking-wider mr-2">Sort by:</span>
+        <div className="flex w-full flex-wrap items-center gap-2 md:w-auto">
+          <span className="mr-2 text-xs font-medium uppercase tracking-wider text-gray-500">Sort by:</span>
           <button
             onClick={() => setSortBy("name")}
             className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-all hover:cursor-pointer ${
@@ -57,27 +57,27 @@ export function CategoryGrid({ initialCategories }: { initialCategories: any[] }
       </div>
 
       {/* Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
         {filteredCategories.map((cat) => (
           <div
             key={cat.id}
-            className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm flex items-center justify-between group hover:border-purple-300 hover:ring-4 hover:ring-purple-50 transition-all cursor-default"
+            className="group flex items-center justify-between gap-3 rounded-xl border border-gray-200 bg-white p-4 shadow-sm transition-all hover:border-purple-300 hover:ring-4 hover:ring-purple-50 sm:p-5"
           >
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-gradient-to-br from-purple-50 to-indigo-50 rounded-xl flex items-center justify-center text-purple-600 border border-purple-100 group-hover:scale-110 transition-transform">
-                <Tag className="w-6 h-6" />
+            <div className="flex min-w-0 flex-1 items-center gap-3 sm:gap-4">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-purple-100 bg-gradient-to-br from-purple-50 to-indigo-50 text-purple-600 transition-transform group-hover:scale-110 sm:h-12 sm:w-12">
+                <Tag className="h-5 w-5 sm:h-6 sm:w-6" />
               </div>
-              <div>
-                <h3 className="font-bold text-gray-900 group-hover:text-purple-700 transition-colors">
+              <div className="min-w-0">
+                <h3 className="truncate font-bold text-gray-900 transition-colors group-hover:text-purple-700">
                   {cat.name}
                 </h3>
-                <p className="text-xs font-medium text-gray-500 mt-0.5 bg-gray-100 px-2 py-0.5 rounded-full inline-block">
+                <p className="mt-0.5 inline-block rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-500">
                   {cat._count.products} products
                 </p>
               </div>
             </div>
             
-            <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all">
+            <div className="flex shrink-0 items-center gap-1 opacity-100 transition-all sm:opacity-0 sm:group-hover:opacity-100">
               <EditCategoryModal category={cat} />
               <DeleteCategoryModal id={cat.id} name={cat.name} />
             </div>

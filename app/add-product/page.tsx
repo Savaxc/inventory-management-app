@@ -32,33 +32,33 @@ export default async function AddProductPage() {
     <div className="min-h-screen bg-[#f8f9fa] flex">
       <Sidebar currentPath="/add-product" />
 
-      <main className="flex-1 ml-64 p-10">
-        <div className="max-w-3xl mx-auto mb-8">
+      <main className="min-w-0 flex-1 px-4 pt-24 pb-28 sm:px-6 sm:pt-24 sm:pb-28 lg:ml-64 lg:px-10 lg:pt-10 lg:pb-10">
+        <div className="mx-auto mb-6 max-w-3xl sm:mb-8">
           <Link
             href="/inventory"
-            className="flex items-center gap-2 text-sm text-gray-500 hover:text-purple-600 transition-colors mb-4 group"
+            className="group mb-4 flex items-center gap-2 text-sm text-gray-500 transition-colors hover:text-purple-600"
           >
-            <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
+            <ArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-1" />
             Back to Inventory
           </Link>
-          <h1 className="text-3xl font-bold text-gray-900 tracking-tight">
+          <h1 className="text-2xl font-bold tracking-tight text-gray-900 sm:text-3xl">
             Create New Product
           </h1>
-          <p className="text-gray-500 mt-1">
+          <p className="mt-1 text-gray-500">
             Fill in the details below to add a new item to your catalog.
           </p>
         </div>
 
-        <div className="max-w-3xl mx-auto">
-          <ActionForm action={createProduct} className="space-y-6">
-            <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
-              <div className="px-6 py-4 border-b border-gray-50 bg-gray-50/50">
-                <h2 className="text-sm font-semibold text-gray-800 uppercase tracking-wider">
+        <div className="mx-auto max-w-3xl">
+          <ActionForm action={createProduct} className="space-y-5 sm:space-y-6">
+            <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
+              <div className="border-b border-gray-50 bg-gray-50/50 px-5 py-4 sm:px-6">
+                <h2 className="text-sm font-semibold uppercase tracking-wider text-gray-800">
                   General Information
                 </h2>
               </div>
 
-              <div className="p-8 space-y-6">
+              <div className="space-y-6 p-5 sm:p-8">
                 <div>
                   <label
                     htmlFor="name"
@@ -88,8 +88,8 @@ export default async function AddProductPage() {
                     Category
                   </label>
 
-                  <div className="flex gap-2">
-                    <div className="relative flex-1">
+                  <div className="flex min-w-0 gap-2">
+                    <div className="relative min-w-0 flex-1">
                       <Tag className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                       <select
                         id="categoryId"
@@ -157,14 +157,14 @@ export default async function AddProductPage() {
             </div>
 
             {/* Inventory Settings Section */}
-            <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
-              <div className="px-6 py-4 border-b border-gray-50 bg-gray-50/50">
-                <h2 className="text-sm font-semibold text-gray-800 uppercase tracking-wider">
+            <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
+              <div className="border-b border-gray-50 bg-gray-50/50 px-5 py-4 sm:px-6">
+                <h2 className="text-sm font-semibold uppercase tracking-wider text-gray-800">
                   Inventory Settings
                 </h2>
               </div>
 
-              <div className="p-8 grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 gap-6 p-5 sm:p-8 md:grid-cols-2">
                 <div>
                   <label
                     htmlFor="sku"
@@ -215,10 +215,10 @@ export default async function AddProductPage() {
               </div>
             </div>
 
-            <div className="flex items-center justify-end gap-4 pt-4">
+            <div className="flex flex-col-reverse gap-3 pt-4 sm:flex-row sm:items-center sm:justify-end sm:gap-4">
               <Link
                 href="/inventory"
-                className="px-8 py-3 bg-white border border-gray-200 text-gray-700 rounded-xl hover:bg-gray-50 transition-all font-medium text-sm"
+                className="w-full rounded-xl border border-gray-200 bg-white px-8 py-3 text-center text-sm font-medium text-gray-700 transition-all hover:bg-gray-50 sm:w-auto"
               >
                 Discard
               </Link>

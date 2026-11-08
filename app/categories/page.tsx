@@ -27,24 +27,26 @@ export default async function CategoriesPage() {
   return (
     <div className="min-h-screen bg-gray-50 flex">
       <Sidebar currentPath="/categories" />
-      <main className="flex-1 ml-64 p-10">
+      <main className="min-w-0 flex-1 px-4 pt-24 pb-28 sm:px-6 sm:pt-24 sm:pb-28 lg:ml-64 lg:px-10 lg:pt-10 lg:pb-10">
         {/* Header Section */}
-        <div className="flex items-center justify-between mb-8">
+        <div className="mb-6 flex flex-col gap-4 sm:mb-8 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900 tracking-tight">
+            <h1 className="text-xl font-bold tracking-tight text-gray-900 sm:text-2xl">
               Categories
             </h1>
-            <p className="text-sm text-gray-500 mt-1">
+            <p className="mt-1 text-sm text-gray-500">
               Manage and organize your product labels for better inventory
               tracking.
             </p>
           </div>
-          <CreateCategoryModal />
+          <div className="w-full sm:w-auto [&>button]:w-full sm:[&>button]:w-auto">
+            <CreateCategoryModal />
+          </div>
         </div>
 
         {/* Quick Stats Section */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+        <div className="grid grid-cols-1 gap-4 sm:gap-6 md:grid-cols-3">
+          <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm transition-shadow hover:shadow-md sm:p-6">
             <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
               Total Categories
             </p>
@@ -58,7 +60,7 @@ export default async function CategoriesPage() {
             </div>
           </div>
 
-          <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+          <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm transition-shadow hover:shadow-md sm:p-6">
             <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
               Most Used
             </p>
@@ -79,7 +81,7 @@ export default async function CategoriesPage() {
             </div>
           </div>
 
-          <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+          <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm transition-shadow hover:shadow-md sm:p-6">
             <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
               Empty Categories
             </p>
@@ -98,7 +100,7 @@ export default async function CategoriesPage() {
         </div>
 
         {/* Separation */}
-        <div className="relative my-10">
+        <div className="relative my-7 sm:my-10">
           <div
             className="absolute inset-0 flex items-center"
             aria-hidden="true"

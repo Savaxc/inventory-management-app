@@ -37,7 +37,7 @@ export function DeleteProductModal({
 
   return (
     <AlertDialog open={isOpen} onOpenChange={onClose}>
-      <AlertDialogContent className="max-w-[380px] rounded-3xl p-6 border-none shadow-2xl">
+      <AlertDialogContent className="w-[calc(100%-2rem)] max-w-[380px] rounded-3xl border-none p-5 shadow-2xl sm:p-6">
         <AlertDialogHeader className="flex flex-col items-center">
           <div className="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mb-2 animate-in fade-in zoom-in duration-300">
             <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">

@@ -76,7 +76,7 @@ export function ImportCSVButton() {
   };
 
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center">
       <input
         type="file"
         ref={fileInputRef}
@@ -88,16 +88,16 @@ export function ImportCSVButton() {
       <button 
         title="Download CSV Template"
         onClick={downloadTemplate}
-        className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-xl text-sm font-medium hover:bg-yellow-50 transition-all disabled:opacity-50 hover:cursor-pointer"
+        className="flex w-full items-center justify-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-medium transition-all hover:bg-yellow-50 hover:cursor-pointer disabled:opacity-50 sm:w-auto"
       >
-        <HelpCircle className="w-4 h-4 text-yellow-600" />
+        <HelpCircle className="h-4 w-4 shrink-0 text-yellow-600" />
         Download Sample CSV
       </button>
 
       <button
         onClick={() => fileInputRef.current?.click()}
         disabled={isUploading}
-        className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-xl text-sm font-medium hover:bg-purple-50 transition-all disabled:opacity-50 hover:cursor-pointer"
+        className="flex w-full items-center justify-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-medium transition-all hover:bg-purple-50 hover:cursor-pointer disabled:opacity-50 sm:w-auto"
       >
         {isUploading ? (
           <Loader2 className="w-4 h-4 animate-spin" />

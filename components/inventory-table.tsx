@@ -114,6 +114,42 @@ export default function InventoryTable({
     startIndex + ITEMS_PER_PAGE,
   );
 
+  const pageNumbers = useMemo(() => {
+    if (totalPages <= 5) {
+      return Array.from({ length: totalPages }, (_, index) => index + 1);
+    }
+
+    const firstPage = Math.max(
+      1,
+      Math.min(currentPage - 2, totalPages - 4),
+    );
+    return Array.from({ length: 5 }, (_, index) => firstPage + index);
+  }, [currentPage, totalPages]);
+
+  const getProductStatus = (product: Product) => {
+    const qty = Number(product.quantity);
+    const threshold = product.lowStockAt ?? 5;
+
+    if (qty === 0) {
+      return {
+        label: "Out of Stock",
+        css: "bg-red-50 text-red-700 border-red-100",
+      };
+    }
+
+    if (qty <= threshold) {
+      return {
+        label: "Low Stock",
+        css: "bg-yellow-50 text-yellow-700 border-yellow-100",
+      };
+    }
+
+    return {
+      label: "In Stock",
+      css: "bg-green-50 text-green-700 border-green-100",
+    };
+  };
+
   const requestSort = (key: keyof Product) => {
     let direction: "asc" | "desc" = "asc";
     if (sortConfig.key === key && sortConfig.direction === "asc") {
@@ -206,8 +242,8 @@ export default function InventoryTable({
   return (
     <div className="space-y-4">
       {/* Summary Bar */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
+      <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
+        <div className="min-w-0 rounded-xl border border-gray-200 bg-white p-3 shadow-sm sm:p-4">
           <p className="text-xs text-gray-500 font-medium uppercase tracking-wider mb-1">
             Results
           </p>
@@ -218,7 +254,7 @@ export default function InventoryTable({
             <span className="text-xs text-gray-400">Products</span>
           </div>
         </div>
-        <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
+        <div className="min-w-0 rounded-xl border border-gray-200 bg-white p-3 shadow-sm sm:p-4">
           <p className="text-xs text-green-600 font-medium uppercase tracking-wider mb-1">
             In Stock
           </p>
@@ -229,7 +265,7 @@ export default function InventoryTable({
             </span>
           </div>
         </div>
-        <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
+        <div className="min-w-0 rounded-xl border border-gray-200 bg-white p-3 shadow-sm sm:p-4">
           <p className="text-xs text-yellow-600 font-medium uppercase tracking-wider mb-1">
             Low Stock
           </p>
@@ -240,7 +276,7 @@ export default function InventoryTable({
             </span>
           </div>
         </div>
-        <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
+        <div className="min-w-0 rounded-xl border border-gray-200 bg-white p-3 shadow-sm sm:p-4">
           <p className="text-xs text-red-600 font-medium uppercase tracking-wider mb-1">
             Out of Stock
           </p>
@@ -255,39 +291,41 @@ export default function InventoryTable({
 
       {/* Bulk Action Bar */}
       <div
-        className={`flex items-center justify-between p-3 bg-purple-50 border border-purple-100 rounded-lg transition-all ${selectedIds.length > 0 ? "opacity-100 visible" : "opacity-0 invisible h-0"}`}
+        className={`items-center justify-between gap-3 rounded-lg border border-purple-100 bg-purple-50 p-3 ${
+          selectedIds.length > 0 ? "flex" : "hidden"
+        }`}
       >
         <span className="text-sm font-medium text-purple-700">
           {selectedIds.length} selected
         </span>
         <button
           onClick={openBulkDeleteModal}
-          className="flex items-center gap-2 px-3 py-1.5 bg-red-600 text-white rounded-md text-sm hover:bg-red-700 font-medium transition-all active:scale-95 hover:cursor-pointer"
+          className="flex shrink-0 items-center gap-2 rounded-md bg-red-600 px-3 py-1.5 text-sm font-medium text-white transition-all hover:bg-red-700 hover:cursor-pointer active:scale-95"
         >
           <Trash2 className="w-4 h-4" /> Delete
         </button>
       </div>
 
       {/* CSV/PDF Buttons */}
-      <div className="flex items-center justify-between mb-3 w-full">
+      <div className="mb-3 flex w-full flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
         <ImportCSVButton />
-        <div className="flex gap-2">
+        <div className="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto">
           <button
             onClick={() => exportToCSV(products, "inventory-export")}
-            className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-xl text-sm font-medium hover:bg-purple-50 transition-all text-gray-700 hover:cursor-pointer"
+            className="flex items-center justify-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition-all hover:bg-purple-50 hover:cursor-pointer"
           >
-            <FileSpreadsheet className="w-4 h-4 text-purple-600" />
+            <FileSpreadsheet className="h-4 w-4 shrink-0 text-purple-600" />
             Export CSV
           </button>
 
           <PDFDownloadLink
             document={<InventoryPDFReport products={products} />}
             fileName="inventory-report.pdf"
-            className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-xl text-sm font-medium hover:bg-purple-50 transition-all text-gray-700"
+            className="flex items-center justify-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition-all hover:bg-purple-50"
           >
             {({ loading }) => (
               <>
-                <FileText className="w-4 h-4 text-purple-600" />
+                <FileText className="h-4 w-4 shrink-0 text-purple-600" />
                 {loading ? "Preparing..." : "Download PDF"}
               </>
             )}
@@ -295,11 +333,139 @@ export default function InventoryTable({
         </div>
       </div>
 
-      <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+      <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+        {/* Mobile / tablet product cards */}
+        <div className="divide-y divide-gray-100 xl:hidden">
+          {paginatedProducts.map((product) => {
+            const isSelected = selectedIds.includes(product.id);
+            const qty = Number(product.quantity);
+            const threshold = product.lowStockAt ?? 5;
+            const status = getProductStatus(product);
+
+            return (
+              <div
+                key={product.id}
+                className={`p-4 transition-colors ${
+                  isSelected ? "bg-purple-50/40" : ""
+                }`}
+              >
+                <div className="flex items-start gap-3">
+                  <input
+                    type="checkbox"
+                    checked={isSelected}
+                    onChange={() => toggleSelect(product.id)}
+                    aria-label={`Select ${product.name}`}
+                    className="mt-1 h-4 w-4 shrink-0 cursor-pointer rounded border-gray-300 text-purple-600 focus:ring-purple-500"
+                  />
+
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex min-w-0 items-center gap-2">
+                        <div
+                          className={`flex h-8 w-8 shrink-0 items-center justify-center rounded ${
+                            isSelected
+                              ? "bg-purple-100 text-purple-600"
+                              : "bg-gray-100 text-gray-400"
+                          }`}
+                        >
+                          <Package className="h-4 w-4" />
+                        </div>
+                        <div className="min-w-0">
+                          <p
+                            className="truncate text-sm font-semibold text-gray-900"
+                            title={product.name}
+                          >
+                            {product.name}
+                          </p>
+                          <p
+                            className="truncate font-mono text-[11px] text-gray-400"
+                            title={product.sku || "No SKU"}
+                          >
+                            {product.sku || "No SKU"}
+                          </p>
+                        </div>
+                      </div>
+
+                      <span
+                        className={`shrink-0 rounded-md border px-2 py-0.5 text-[10px] font-bold uppercase ${status.css}`}
+                      >
+                        {status.label}
+                      </span>
+                    </div>
+
+                    <div className="mt-3 grid grid-cols-2 gap-2 rounded-lg bg-gray-50 p-2.5 text-xs">
+                      <div className="min-w-0">
+                        <p className="text-[10px] uppercase tracking-wide text-gray-400">
+                          Category
+                        </p>
+                        <p className="mt-0.5 flex items-center gap-1 truncate font-medium text-gray-700">
+                          <Tag className="h-3 w-3 shrink-0" />
+                          <span className="truncate">
+                            {product.categoryName || "General"}
+                          </span>
+                        </p>
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-[10px] uppercase tracking-wide text-gray-400">
+                          Price
+                        </p>
+                        <p className="mt-0.5 font-medium text-gray-900">
+                          ${Number(product.price).toFixed(2)}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-[10px] uppercase tracking-wide text-gray-400">
+                          Stock
+                        </p>
+                        <p className="mt-0.5 font-medium text-gray-900">
+                          {qty} units
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-[10px] uppercase tracking-wide text-gray-400">
+                          Low stock at
+                        </p>
+                        <p className="mt-0.5 font-medium text-gray-700">
+                          {threshold} units
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="mt-3 flex justify-end gap-2">
+                      <button
+                        onClick={() => {
+                          setSelectedProduct(product);
+                          setIsModalOpen(true);
+                        }}
+                        className="flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs font-medium text-gray-600 transition-colors hover:text-purple-600 hover:cursor-pointer"
+                      >
+                        <Edit2 className="h-3.5 w-3.5" />
+                        Edit
+                      </button>
+                      <button
+                        onClick={() => {
+                          setProductToDelete(product);
+                          setIsDeleteModalOpen(true);
+                        }}
+                        className="flex items-center gap-1.5 rounded-lg border border-red-100 bg-red-50 px-3 py-2 text-xs font-medium text-red-600 transition-colors hover:bg-red-100 hover:cursor-pointer"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                        Delete
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Desktop table */}
+        <div className="hidden xl:block">
         <table className="w-full border-collapse text-left text-sm table-fixed">
           <thead>
             <tr className="bg-gray-50/50 border-b border-gray-100">
-              <th className="px-6 py-4 w-[60px]">
+              <th className="px-4 py-4 w-[60px]">
                 <input
                   type="checkbox"
                   checked={
@@ -312,7 +478,7 @@ export default function InventoryTable({
               </th>
               <th
                 onClick={() => requestSort("name")}
-                className="px-6 py-4 w-[25%] text-xs font-bold text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100/50 transition-colors"
+                className="px-4 py-4 w-[20%] text-xs font-bold text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100/50 transition-colors"
               >
                 <div className="flex items-center gap-2">
                   Product {getSortIcon("name")}
@@ -320,7 +486,7 @@ export default function InventoryTable({
               </th>
               <th
                 onClick={() => requestSort("sku")}
-                className="px-6 py-4 w-[15%] text-xs font-bold text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100/50 transition-colors"
+                className="px-4 py-4 w-[12%] text-xs font-bold text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100/50 transition-colors"
               >
                 <div className="flex items-center gap-2">
                   SKU {getSortIcon("sku")}
@@ -328,7 +494,7 @@ export default function InventoryTable({
               </th>
               <th
                 onClick={() => requestSort("categoryName")}
-                className="px-6 py-4 w-[15%] text-xs font-bold text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100/50 transition-colors"
+                className="px-4 py-4 w-[12%] text-xs font-bold text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100/50 transition-colors"
               >
                 <div className="flex items-center gap-2">
                   Category {getSortIcon("categoryName")}
@@ -336,7 +502,7 @@ export default function InventoryTable({
               </th>
               <th
                 onClick={() => requestSort("price")}
-                className="px-6 py-4 w-[12%] text-xs font-bold text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100/50 transition-colors"
+                className="px-4 py-4 w-[10%] text-xs font-bold text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100/50 transition-colors"
               >
                 <div className="flex items-center gap-2">
                   Price {getSortIcon("price")}
@@ -344,16 +510,16 @@ export default function InventoryTable({
               </th>
               <th
                 onClick={() => requestSort("quantity")}
-                className="px-6 py-4 w-[12%] text-xs font-bold text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100/50 transition-colors"
+                className="px-4 py-4 w-[10%] text-xs font-bold text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100/50 transition-colors"
               >
                 <div className="flex items-center gap-2">
                   Stock {getSortIcon("quantity")}
                 </div>
               </th>
-              <th className="px-6 py-4 w-[12%] text-xs font-bold text-gray-500 uppercase tracking-wider">
+              <th className="px-4 py-4 w-[13%] text-xs font-bold text-gray-500 uppercase tracking-wider">
                 Status
               </th>
-              <th className="px-6 py-4 w-[100px] text-xs font-bold text-gray-500 uppercase tracking-wider text-right">
+              <th className="px-4 py-4 w-[100px] text-xs font-bold text-gray-500 uppercase tracking-wider text-right">
                 Actions
               </th>
             </tr>
@@ -363,28 +529,14 @@ export default function InventoryTable({
               const isSelected = selectedIds.includes(product.id);
               const qty = Number(product.quantity);
               const threshold = product.lowStockAt ?? 5;
-
-              let status = {
-                label: "In Stock",
-                css: "bg-green-50 text-green-700 border-green-100",
-              };
-              if (qty === 0)
-                status = {
-                  label: "Out of Stock",
-                  css: "bg-red-50 text-red-700 border-red-100",
-                };
-              else if (qty <= threshold)
-                status = {
-                  label: "Low Stock",
-                  css: "bg-yellow-50 text-yellow-700 border-yellow-100",
-                };
+              const status = getProductStatus(product);
 
               return (
                 <tr
                   key={product.id}
                   className={`transition-colors group ${isSelected ? "bg-purple-50/30" : "hover:bg-gray-50/50"}`}
                 >
-                  <td className="px-6 py-4">
+                  <td className="px-4 py-4">
                     <input
                       type="checkbox"
                       checked={isSelected}
@@ -392,7 +544,7 @@ export default function InventoryTable({
                       className="rounded border-gray-300 text-purple-600 focus:ring-purple-500 cursor-pointer"
                     />
                   </td>
-                  <td className="px-6 py-4">
+                  <td className="px-4 py-4">
                     <div className="flex items-center gap-3 overflow-hidden">
                       <div
                         className={`w-8 h-8 rounded bg-gray-100 flex-shrink-0 flex items-center justify-center ${isSelected ? "text-purple-600 bg-purple-100" : "text-gray-400"}`}
@@ -407,7 +559,7 @@ export default function InventoryTable({
                       </span>
                     </div>
                   </td>
-                  <td className="px-6 py-4 text-gray-500 font-mono truncate">
+                  <td className="px-4 py-4 text-gray-500 font-mono truncate">
                     <span
                     className="text-gray-500 font-mono truncate"
                     title={product.sku || "N/A"}
@@ -417,7 +569,7 @@ export default function InventoryTable({
                     </span>
                     
                   </td>
-                  <td className="px-6 py-4">
+                  <td className="px-4 py-4">
                     <div className="truncate">
                       <Badge
                         variant="secondary"
@@ -430,10 +582,10 @@ export default function InventoryTable({
                       </Badge>
                     </div>
                   </td>
-                  <td className="px-6 py-4 text-gray-900 font-medium">
+                  <td className="px-4 py-4 text-gray-900 font-medium">
                     ${Number(product.price).toFixed(2)}
                   </td>
-                  <td className="px-6 py-4">
+                  <td className="px-4 py-4">
                     <div className="flex flex-col">
                       <span className="font-medium text-gray-900">
                         {qty} units
@@ -443,14 +595,14 @@ export default function InventoryTable({
                       </span>
                     </div>
                   </td>
-                  <td className="px-6 py-4">
+                  <td className="px-4 py-4">
                     <span
                       className={`px-2 py-0.5 rounded-md text-[10px] font-bold border uppercase whitespace-nowrap ${status.css}`}
                     >
                       {status.label}
                     </span>
                   </td>
-                  <td className="px-6 py-4 text-right">
+                  <td className="px-4 py-4 text-right">
                     <div className="flex justify-end gap-1">
                       <button
                         title="Edit item"
@@ -479,11 +631,12 @@ export default function InventoryTable({
             })}
           </tbody>
         </table>
+        </div>
 
         {/* Pagination */}
         {totalPages > 1 && (
-          <div className="px-6 py-4 h-16 bg-gray-50/50 border-t border-gray-100 flex items-center justify-between">
-            <p className="text-xs text-gray-500">
+          <div className="flex flex-col gap-3 border-t border-gray-100 bg-gray-50/50 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+            <p className="text-center text-xs text-gray-500 sm:text-left">
               Showing{" "}
               <span className="font-medium text-gray-900">
                 {startIndex + 1}
@@ -498,39 +651,46 @@ export default function InventoryTable({
               </span>{" "}
               results
             </p>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center justify-center gap-2">
               <button
                 onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
                 disabled={currentPage === 1}
-                className="p-2 rounded-lg border border-gray-200 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors hover:cursor-pointer"
+                aria-label="Previous page"
+                className="rounded-lg border border-gray-200 bg-white p-2 transition-colors hover:bg-gray-50 hover:cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
               >
-                <ChevronLeft className="w-4 h-4 text-gray-600" />
+                <ChevronLeft className="h-4 w-4 text-gray-600" />
               </button>
 
-              <div className="flex items-center gap-1">
-                {[...Array(totalPages)].map((_, i) => (
+              <div className="hidden items-center gap-1 sm:flex">
+                {pageNumbers.map((page) => (
                   <button
-                    key={i + 1}
-                    onClick={() => setCurrentPage(i + 1)}
-                    className={`w-8 h-8 rounded-lg text-xs font-medium transition-all hover:cursor-pointer ${
-                      currentPage === i + 1
+                    key={page}
+                    onClick={() => setCurrentPage(page)}
+                    aria-current={currentPage === page ? "page" : undefined}
+                    className={`h-8 w-8 rounded-lg text-xs font-medium transition-all hover:cursor-pointer ${
+                      currentPage === page
                         ? "bg-purple-600 text-white shadow-sm"
                         : "text-gray-600 hover:bg-gray-100"
                     }`}
                   >
-                    {i + 1}
+                    {page}
                   </button>
                 ))}
               </div>
+
+              <span className="px-1 text-xs font-medium text-gray-500 sm:hidden">
+                Page {currentPage} of {totalPages}
+              </span>
 
               <button
                 onClick={() =>
                   setCurrentPage((prev) => Math.min(prev + 1, totalPages))
                 }
                 disabled={currentPage === totalPages}
-                className="p-2 rounded-lg border border-gray-200 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors hover:cursor-pointer"
+                aria-label="Next page"
+                className="rounded-lg border border-gray-200 bg-white p-2 transition-colors hover:bg-gray-50 hover:cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
               >
-                <ChevronRight className="w-4 h-4 text-gray-600" />
+                <ChevronRight className="h-4 w-4 text-gray-600" />
               </button>
             </div>
           </div>

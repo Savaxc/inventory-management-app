@@ -42,49 +42,49 @@ export default async function Home() {
   return (
     <div className="min-h-screen bg-white text-zinc-900 selection:bg-zinc-100">
       {/* Navigation */}
-      <nav className="p-8 flex justify-between items-center max-w-7xl mx-auto">
-        <span className="font-medium tracking-tighter text-xl">Stock.app</span>
+      <nav className="mx-auto flex max-w-7xl items-center justify-between px-5 py-5 sm:px-8 sm:py-8">
+        <span className="text-xl font-medium tracking-tighter">Stock.app</span>
         <Link
           href="/sign-in"
-          className="text-sm font-medium hover:text-zinc-500 transition-colors"
+          className="text-sm font-medium transition-colors hover:text-zinc-500"
         >
           Sign In
         </Link>
       </nav>
 
-      <main className="flex flex-col items-center justify-center px-6 pt-20 pb-32 text-center">
+      <main className="flex flex-col items-center justify-center px-5 pt-12 pb-24 text-center sm:px-6 sm:pt-20 sm:pb-32">
         {/* Hero Section */}
         <FadeIn>
-          <h1 className="text-5xl md:text-7xl font-bold tracking-tight mb-8 max-w-3xl leading-[1.1]">
+          <h1 className="mb-6 max-w-3xl text-4xl font-bold leading-[1.1] tracking-tight sm:mb-8 sm:text-5xl md:text-7xl">
             Inventory tracking, <br />
             <span className="text-zinc-400">simplified.</span>
           </h1>
         </FadeIn>
 
         <FadeIn delay={0.2}>
-          <p className="text-lg text-zinc-500 mb-12 max-w-lg leading-relaxed">
+          <p className="mb-9 max-w-lg text-base leading-relaxed text-zinc-500 sm:mb-12 sm:text-lg">
             Monitor stock levels and gain insights without the complexity of
             traditional systems. Built for modern teams.
           </p>
         </FadeIn>
 
-        <FadeIn delay={0.4}>
-          <div className="flex gap-4">
+        <FadeIn delay={0.4} className="w-full sm:w-auto">
+          <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row sm:gap-4">
             <Link
               href="/sign-in"
-              className="bg-zinc-900 text-white px-10 py-4 rounded-full font-medium hover:bg-zinc-800 transition-all active:scale-95"
+              className="w-full rounded-full bg-zinc-900 px-10 py-4 text-center font-medium text-white transition-all hover:bg-zinc-800 active:scale-95 sm:w-auto"
             >
               Get Started
             </Link>
-            <button className="bg-transparent text-zinc-900 px-10 py-4 rounded-full font-medium border border-zinc-200 hover:border-zinc-900 transition-all">
+            <button className="w-full rounded-full border border-zinc-200 bg-transparent px-10 py-4 font-medium text-zinc-900 transition-all hover:border-zinc-900 sm:w-auto">
               View Demo
             </button>
           </div>
         </FadeIn>
 
         {/* Dashboard Preview Image */}
-        <FadeIn delay={0.6}>
-          <div className="mt-24 w-full max-w-5xl rounded-2xl border border-zinc-200 shadow-2xl overflow-hidden relative bg-white group">
+        <FadeIn delay={0.6} className="w-full">
+          <div className="group relative mx-auto mt-16 w-full max-w-5xl overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-2xl sm:mt-24">
             <div className="w-full h-8 bg-zinc-100/80 border-b border-zinc-200 flex items-center px-4 gap-1.5 z-10 relative">
               <div className="w-2.5 h-2.5 rounded-full bg-red-400/80" />
               <div className="w-2.5 h-2.5 rounded-full bg-yellow-400/80" />
@@ -105,10 +105,10 @@ export default async function Home() {
         </FadeIn>
 
         {/* Features Grid */}
-        <div className="mt-32 max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 text-left">
+        <div className="mx-auto mt-20 grid w-full max-w-6xl grid-cols-1 gap-8 text-left sm:mt-32 sm:gap-10 md:grid-cols-2 lg:grid-cols-4 lg:gap-12">
           {features.map((feature, index) => (
-            <FadeIn key={index} delay={index * 0.1}>
-              <div className="space-y-4">
+            <FadeIn key={index} delay={index * 0.1} className="h-full">
+              <div className="h-full space-y-4">
                 <div className="w-12 h-12 bg-zinc-50 border border-zinc-100 rounded-xl flex items-center justify-center text-zinc-900">
                   {feature.icon}
                 </div>
@@ -122,17 +122,17 @@ export default async function Home() {
         </div>
 
         {/* Call to Action Bottom */}
-        <FadeIn>
-          <div className="mt-32 p-12 bg-zinc-50 rounded-3xl border border-zinc-100 w-full max-w-5xl">
-            <h2 className="text-3xl font-bold mb-4">
+        <FadeIn className="w-full">
+          <div className="mx-auto mt-20 w-full max-w-5xl rounded-3xl border border-zinc-100 bg-zinc-50 p-6 sm:mt-32 sm:p-12">
+            <h2 className="mb-4 text-2xl font-bold sm:text-3xl">
               Ready to optimize your stock?
             </h2>
-            <p className="text-zinc-500 mb-8">
+            <p className="mb-8 text-zinc-500">
               Join hundreds of teams managing their inventory the smart way.
             </p>
             <Link
               href="/sign-up"
-              className="bg-zinc-900 text-white px-8 py-3 rounded-full font-medium hover:bg-zinc-800 transition-all inline-block"
+              className="inline-block rounded-full bg-zinc-900 px-8 py-3 font-medium text-white transition-all hover:bg-zinc-800"
             >
               Create your account
             </Link>

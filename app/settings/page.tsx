@@ -7,40 +7,40 @@ export default async function SettingsPage() {
     <div className="min-h-screen bg-[#f8f9fa] flex">
       <Sidebar currentPath="/settings" />
 
-      <main className="flex-1 ml-64 p-10">
+      <main className="min-w-0 flex-1 px-4 pt-24 pb-28 sm:px-6 sm:pt-24 sm:pb-28 lg:ml-64 lg:px-10 lg:pt-10 lg:pb-10">
         {/* Header */}
-        <div className="max-w-5xl mx-auto mb-10">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="p-2 bg-purple-100 rounded-lg">
-              <SettingsIcon className="w-5 h-5 text-purple-600" />
+        <div className="mx-auto mb-7 max-w-5xl sm:mb-10">
+          <div className="mb-2 flex items-center gap-3">
+            <div className="rounded-lg bg-purple-100 p-2">
+              <SettingsIcon className="h-5 w-5 text-purple-600" />
             </div>
-            <h1 className="text-3xl font-bold text-gray-900 tracking-tight">
+            <h1 className="text-2xl font-bold tracking-tight text-gray-900 sm:text-3xl">
               Account Settings
             </h1>
           </div>
-          <p className="text-gray-500 ml-12">
+          <p className="text-gray-500 sm:ml-12">
             Manage your personal information, security preferences, and
             connected accounts.
           </p>
         </div>
 
-        <div className="max-w-5xl mx-auto">
+        <div className="mx-auto max-w-5xl">
             <UserProfile
               routing="hash"
               appearance={{
                 elements: {
                   rootBox: "w-full !max-w-none !m-0 !block",
-                  card: "w-full !max-w-none !shadow-none !border-none bg-transparent !flex-row !min-h-[600px]",
+                  card: "w-full !max-w-none !shadow-none !border-none bg-transparent",
                   navbar:
-                    "bg-gray-50/50 border-r border-gray-100 p-8 shrink-0 !w-64",
+                    "bg-gray-50/50 border-r border-gray-100 p-4 shrink-0 sm:p-8",
                   navbarMobileMenuButton: "text-purple-600",
                   scrollBox: "w-full !max-w-none !rounded-none",
-                  pageScrollBox: "w-full !max-w-none !p-8",
+                  pageScrollBox: "w-full !max-w-none !rounded-none !p-2 sm:!p-8",
                   contentBox: "w-full !max-w-none !block",
                   footer: "hidden !h-0 !p-0 !m-0 !border-none",
                   footerAction: "hidden",
                   headerTitle:
-                    "text-2xl font-bold tracking-tight text-gray-900",
+                    "text-xl font-bold tracking-tight text-gray-900 sm:text-2xl",
                   headerSubtitle: "text-gray-500",
                 },
                 variables: {
@@ -52,22 +52,22 @@ export default async function SettingsPage() {
         </div>
 
         {/*Additional Section */}
-        <div className="max-w-5xl mx-auto mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="bg-purple-50 border border-purple-100 p-6 rounded-2xl flex items-start gap-4">
-            <ShieldCheck className="w-6 h-6 text-purple-600 mt-1" />
-            <div>
+        <div className="mx-auto mt-6 grid max-w-5xl grid-cols-1 gap-4 sm:mt-8 sm:gap-6 md:grid-cols-2">
+          <div className="flex items-start gap-4 rounded-2xl border border-purple-100 bg-purple-50 p-5 sm:p-6">
+            <ShieldCheck className="mt-1 h-6 w-6 shrink-0 text-purple-600" />
+            <div className="min-w-0">
               <h3 className="font-semibold text-purple-900">Security Audit</h3>
-              <p className="text-sm text-purple-700 mt-1">
+              <p className="mt-1 text-sm text-purple-700">
                 Your account is currently secured with Two-Factor Authentication
                 via Clerk.
               </p>
             </div>
           </div>
-          <div className="bg-blue-50 border border-blue-100 p-6 rounded-2xl flex items-start gap-4">
-            <User className="w-6 h-6 text-blue-600 mt-1" />
-            <div>
+          <div className="flex items-start gap-4 rounded-2xl border border-blue-100 bg-blue-50 p-5 sm:p-6">
+            <User className="mt-1 h-6 w-6 shrink-0 text-blue-600" />
+            <div className="min-w-0">
               <h3 className="font-semibold text-blue-900">Subscription Plan</h3>
-              <p className="text-sm text-blue-700 mt-1">
+              <p className="mt-1 text-sm text-blue-700">
                 You are on the <span className="font-bold">Pro Free Tier</span>.
                 Everything is unlocked.
               </p>

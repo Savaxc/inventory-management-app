@@ -23,35 +23,35 @@ export async function ActivityFeed({ userId }: { userId: string }) {
   });
 
   return (
-    <div className="bg-white rounded-2xl border border-gray-200 shadow-sm flex flex-col h-full">
-      <div className="p-5 border-b border-gray-100 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <ActivityIcon className="w-5 h-5 text-gray-400" />
-          <h3 className="font-semibold text-gray-900">Recent Activity</h3>
+    <div className="flex h-full flex-col rounded-2xl border border-gray-200 bg-white shadow-sm">
+      <div className="flex items-center justify-between gap-2 border-b border-gray-100 p-4 sm:p-5">
+        <div className="flex min-w-0 items-center gap-2">
+          <ActivityIcon className="h-5 w-5 shrink-0 text-gray-400" />
+          <h3 className="truncate font-semibold text-gray-900">Recent Activity</h3>
         </div>
-        <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Live</span>
+        <span className="shrink-0 text-[10px] font-bold uppercase tracking-widest text-gray-400">Live</span>
       </div>
 
-      <div className="p-5 flex-1">
+      <div className="flex-1 p-4 sm:p-5">
         <div className="space-y-6">
           {activities.map((item) => (
             <div key={item.id} className="relative flex gap-4">
               <div className="absolute left-4 top-8 bottom-[-24px] w-[1px] bg-gray-100 last:hidden" />
               
-              <div className="relative z-10 w-8 h-8 rounded-full bg-white border border-gray-100 flex items-center justify-center shadow-sm">
+              <div className="relative z-10 flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-gray-100 bg-white shadow-sm">
                 {icons[item.action as keyof typeof icons] || <ActivityIcon className="w-4 h-4 text-gray-400" />}
               </div>
 
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center justify-between">
-                  <p className="text-sm font-semibold text-gray-900 truncate">
-                    {item.entityName} <span className="text-gray-500 font-normal">({item.entityType.toLowerCase()})</span>
+              <div className="min-w-0 flex-1">
+                <div className="flex flex-col items-start gap-1 sm:flex-row sm:items-center sm:justify-between">
+                  <p className="w-full min-w-0 truncate text-sm font-semibold text-gray-900">
+                    {item.entityName} <span className="font-normal text-gray-500">({item.entityType.toLowerCase()})</span>
                   </p>
-                  <span className="text-[12px] text-gray-400 whitespace-nowrap ml-2">
+                  <span className="whitespace-nowrap text-[11px] text-gray-400 sm:ml-2 sm:text-[12px]">
                     {formatDistanceToNow(new Date(item.createdAt), { addSuffix: true })}
                   </span>
                 </div>
-                <p className="text-xs text-gray-500 mt-0.5 line-clamp-1">
+                <p className="mt-0.5 line-clamp-1 text-xs text-gray-500">
                   {item.details}
                 </p>
               </div>

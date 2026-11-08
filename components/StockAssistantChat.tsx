@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from "react"
+import { usePathname } from "next/navigation"
 import { Bot, X, Send, Trash2, Sparkles } from "lucide-react"
 import { confirmStockUpdate } from "@/app/actions/stock"
 import { StockUpdateApprovalCard } from "@/components/stock-update-approval-card"
@@ -83,6 +84,7 @@ function normalizeStoredMessages(value: unknown): Message[] {
 }
 
 export function StockAssistantChat() {
+  const pathname = usePathname()
   const [isOpen, setIsOpen] = useState(false)
   // Početno stanje je isto na serveru i klijentu (prazan niz) da ne bi bilo hydration greške
   const [messages, setMessages] = useState<Message[]>([])
@@ -371,23 +373,30 @@ export function StockAssistantChat() {
     (message) => message.role === "proposal" && message.status === "pending",
   )
 
+  const isPublicPage =
+    pathname === "/" ||
+    pathname.startsWith("/sign-in") ||
+    pathname.startsWith("/sign-up")
+
+  if (isPublicPage) return null
+
   return (
-    <div className="fixed bottom-6 right-6 z-50">
+    <div className="fixed right-4 bottom-[calc(5rem+env(safe-area-inset-bottom))] z-50 sm:right-6 sm:bottom-6">
       {isOpen && (
-        <div className="mb-4 w-80 md:w-96 h-[480px] bg-white rounded-2xl shadow-2xl border border-gray-100 flex flex-col overflow-hidden transition-all duration-300 animate-in fade-in slide-in-from-bottom-4">
+        <div className="mb-3 flex h-[min(480px,60dvh)] w-[calc(100vw-2rem)] max-w-[calc(100vw-2rem)] flex-col overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-2xl transition-all duration-300 animate-in fade-in slide-in-from-bottom-4 sm:mb-4 sm:h-[480px] sm:w-96 sm:max-w-none">
           {/* Header */}
-          <div className="bg-gradient-to-r from-purple-600 to-indigo-600 p-4 text-white flex items-center justify-between">
-            <div className="flex items-center space-x-2">
-              <div className="bg-white/20 p-1.5 rounded-lg backdrop-blur-sm">
-                <Sparkles className="w-5 h-5 text-white" />
+          <div className="flex items-center justify-between bg-gradient-to-r from-purple-600 to-indigo-600 p-4 text-white">
+            <div className="flex min-w-0 items-center space-x-2">
+              <div className="shrink-0 rounded-lg bg-white/20 p-1.5 backdrop-blur-sm">
+                <Sparkles className="h-5 w-5 text-white" />
               </div>
-              <div>
-                <h3 className="font-semibold text-sm">Stock Asistent</h3>
-                <p className="text-[10px] text-purple-100">Mozaik AI (DeepSeek)</p>
+              <div className="min-w-0">
+                <h3 className="truncate text-sm font-semibold">Stock Asistent</h3>
+                <p className="truncate text-[10px] text-purple-100">Mozaik AI (DeepSeek)</p>
               </div>
             </div>
 
-            <div className="flex items-center space-x-1">
+            <div className="flex shrink-0 items-center space-x-1">
               {messages.length > 0 && (
                 <button
                   onClick={clearChat}
@@ -483,7 +492,8 @@ export function StockAssistantChat() {
       {/* Dugme (Trigger) */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="group relative bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white p-4 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center focus:outline-none ring-4 ring-purple-100 active:scale-95"
+        aria-label={isOpen ? "Close stock assistant" : "Open stock assistant"}
+        className="group relative flex items-center justify-center rounded-full bg-gradient-to-r from-purple-600 to-indigo-600 p-4 text-white shadow-lg ring-4 ring-purple-100 transition-all duration-300 hover:from-purple-700 hover:to-indigo-700 hover:shadow-xl focus:outline-none active:scale-95"
       >
         {isOpen ? (
           <X className="w-6 h-6" />

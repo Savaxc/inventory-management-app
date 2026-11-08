@@ -28,7 +28,7 @@ export function CategoryFilter({ categories }: { categories: any[] }) {
   };
 
   return (
-    <div className="flex flex-wrap gap-2 mb-6">
+    <div className="mb-0 flex flex-wrap gap-2">
       <Badge
         variant={activeCategories.length === 0 ? "default" : "outline"}
         className="cursor-pointer px-4 py-1 rounded-full text-sm hover:bg-purple-300"

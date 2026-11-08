@@ -4,7 +4,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { SearchInput } from "@/components/search-input";
 import { Suspense } from "react";
-import { InventorySkeleton } from "@/components/skeletons/inventory-skeleton";
+import { InventoryTableSkeleton } from "@/components/skeletons/inventory-skeleton";
 import { CategoryFilter } from "@/components/CategoryFilter";
 
 export default async function InventoryPage({
@@ -50,18 +50,20 @@ export default async function InventoryPage({
   return (
     <div className="min-h-screen bg-gray-50 flex">
       <Sidebar currentPath="/inventory" />
-      <main className="flex-1 ml-64 p-10">
-        <div className="flex items-center justify-between mb-8">
+      <main className="min-w-0 flex-1 px-4 pt-24 pb-28 sm:px-6 sm:pt-24 sm:pb-28 lg:ml-64 lg:px-10 lg:pt-10 lg:pb-10">
+        <div className="mb-6 flex items-center justify-between sm:mb-8">
           <div>
-            <h1 className="text-2xl font-semibold text-gray-900">Inventory</h1>
+            <h1 className="text-xl font-semibold text-gray-900 sm:text-2xl">
+              Inventory
+            </h1>
             <p className="text-sm text-gray-500">
               Manage your product stock levels and categories.
             </p>
           </div>
         </div>
 
-        <div className="space-y-6">
-          <div className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm space-y-4">
+        <div className="space-y-5 sm:space-y-6">
+          <div className="space-y-4 rounded-xl border border-gray-200 bg-white p-4 shadow-sm sm:p-5">
             <div className="flex gap-3">
               <SearchInput />
             </div>
@@ -71,7 +73,7 @@ export default async function InventoryPage({
             <CategoryFilter categories={categories} />
           </div>
 
-          <Suspense key={`${v}-${params.categories}`} fallback={<InventorySkeleton />}>
+          <Suspense key={`${v}-${params.categories}`} fallback={<InventoryTableSkeleton />}>
             <InventoryTable products={products} categories={categories} />
           </Suspense>
         </div>

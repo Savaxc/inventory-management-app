@@ -21,16 +21,16 @@ export default function ProductChart({ data }: { data: ChartData[] }) {
 
   if (!hasData) {
     return (
-      <div className="h-48 w-full border-2 border-dashed border-gray-100 rounded-xl flex flex-col items-center justify-center bg-gray-50/50">
-        <PackagePlus className="w-8 h-8 text-purple-200 mb-2" />
-        <p className="text-sm text-gray-400 font-medium">No inventory data yet</p>
+      <div className="flex h-full w-full flex-col items-center justify-center rounded-xl border-2 border-dashed border-gray-100 bg-gray-50/50">
+        <PackagePlus className="mb-2 h-8 w-8 text-purple-200" />
+        <p className="text-sm font-medium text-gray-400">No inventory data yet</p>
         <p className="text-xs text-gray-300">New products will appear here</p>
       </div>
     );
   }
 
   return (
-    <div className="h-48 w-full min-w-0">
+    <div className="h-full w-full min-w-0">
       <ResponsiveContainer width="100%" height="100%">
         <AreaChart
           data={data}
