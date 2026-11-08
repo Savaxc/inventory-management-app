@@ -117,7 +117,7 @@ export default async function DashboardPage() {
           </div>
         </div>
 
-        <div className="mb-6 grid grid-cols-1 gap-6 lg:mb-8 lg:grid-cols-2 lg:gap-8">
+        <div className="mb-6 grid grid-cols-1 gap-6 xl:mb-8 xl:grid-cols-2 xl:gap-8">
           {/* Key Metrics */}
           <div className="rounded-lg border border-gray-200 bg-white p-4 sm:p-6">
             <h2 className="mb-5 text-lg font-semibold text-gray-900 sm:mb-6">
@@ -142,7 +142,7 @@ export default async function DashboardPage() {
 
               <div className="border-y border-gray-100 py-5 text-center sm:border-x sm:border-y-0 sm:px-4 sm:py-0">
                 <div className="flex items-center justify-center space-x-2">
-                  <div className="text-2xl font-bold text-gray-900 sm:text-3xl">
+                  <div className="text-2xl font-bold text-gray-900 sm:text-3xl xl:text-2xl">
                     $
                     {Number(totalValue).toLocaleString("en-US", {
                       minimumFractionDigits: 0,
@@ -205,7 +205,7 @@ export default async function DashboardPage() {
           </div>
         </div>
 
-        <div className="mb-6 grid grid-cols-1 gap-6 lg:mb-8 lg:grid-cols-2 lg:gap-8">
+        <div className="mb-6 grid grid-cols-1 gap-6 xl:mb-8 xl:grid-cols-2 xl:gap-8">
           {/* Stock Levels */}
           <div className="rounded-lg border border-gray-200 bg-white p-4 sm:p-6">
             <div className="mb-5 flex flex-wrap items-center justify-between gap-2 sm:mb-6">

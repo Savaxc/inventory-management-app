@@ -381,9 +381,9 @@ export function StockAssistantChat() {
   if (isPublicPage) return null
 
   return (
-    <div className="fixed right-4 bottom-[calc(5rem+env(safe-area-inset-bottom))] z-50 sm:right-6 sm:bottom-6">
+    <div className="fixed right-4 bottom-[calc(5rem+env(safe-area-inset-bottom))] z-40 sm:right-6 lg:bottom-6">
       {isOpen && (
-        <div className="mb-3 flex h-[min(480px,60dvh)] w-[calc(100vw-2rem)] max-w-[calc(100vw-2rem)] flex-col overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-2xl transition-all duration-300 animate-in fade-in slide-in-from-bottom-4 sm:mb-4 sm:h-[480px] sm:w-96 sm:max-w-none">
+        <div className="mb-3 flex h-[min(480px,60dvh)] w-[calc(100vw-2rem)] max-w-[calc(100vw-2rem)] flex-col overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-2xl transition-all duration-300 animate-in fade-in slide-in-from-bottom-4 sm:mb-4 sm:w-96 sm:max-w-none">
           {/* Header */}
           <div className="flex items-center justify-between bg-gradient-to-r from-purple-600 to-indigo-600 p-4 text-white">
             <div className="flex min-w-0 items-center space-x-2">
