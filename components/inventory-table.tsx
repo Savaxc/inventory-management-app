@@ -582,15 +582,15 @@ export default function InventoryTable({
                       </Badge>
                     </div>
                   </td>
-                  <td className="px-4 py-4 text-gray-900 font-medium">
+                  <td className="px-4 py-4 text-gray-900 font-medium truncate">
                     ${Number(product.price).toFixed(2)}
                   </td>
                   <td className="px-4 py-4">
-                    <div className="flex flex-col">
-                      <span className="font-medium text-gray-900">
+                    <div className="flex min-w-0 flex-col">
+                      <span className="truncate font-medium text-gray-900">
                         {qty} units
                       </span>
-                      <span className="text-[10px] text-gray-400 uppercase tracking-tight">
+                      <span className="truncate text-[10px] text-gray-400 uppercase tracking-tight">
                         Limit: {threshold}
                       </span>
                     </div>
